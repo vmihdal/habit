@@ -2,21 +2,18 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { HabitModule } from './habit/habit.module';
-import { PrismaService } from './prisma/prisma.service';
-import { JwtModule } from '@nestjs/jwt';
+import { AuthModule } from './auth/auth.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1d' },
-    }),
+    PrismaModule,
+    AuthModule,
     UserModule,
     HabitModule
   ],
-  providers: [PrismaService],
 })
 export class AppModule {} 
