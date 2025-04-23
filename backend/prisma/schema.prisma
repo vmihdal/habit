@@ -14,6 +14,7 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  habits    Habit[]
 
   @@map("users")
 }
@@ -39,4 +40,10 @@ enum HabitFrequency {
   WEEKLY
   MONTHLY
   CUSTOM
+}
+
+enum HabitStatus {
+  ACTIVE
+  ARCHIVED
+  COMPLETED
 }
