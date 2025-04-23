@@ -14,4 +14,29 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-} 
+
+  @@map("users")
+}
+
+model Habit {
+  id        Int      @id @default(autoincrement())
+  name      String   
+  startDate   DateTime       @default(now())
+  endDate     DateTime?      // Optional end date for habit
+  frequency  HabitFrequency @default(DAILY)
+  reminder    DateTime?      // Optional reminder time
+  status      HabitStatus    @default(ACTIVE)
+  targetDays  Int?
+  color       String?     
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+
+  @@map("habits")
+}
+
+enum HabitFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  CUSTOM
+}
