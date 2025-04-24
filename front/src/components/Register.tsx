@@ -20,10 +20,6 @@ const schema = yup.object().shape({
     .string()
     .required('Password is required')
     .min(6, 'Password must be at least 6 characters'),
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref('password')], 'Passwords must match')
-    .required('Please confirm your password'),
 });
 
 export const Register: React.FC = () => {
@@ -32,11 +28,11 @@ export const Register: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterCredentials>({
+  } = useForm({
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = async (data: RegisterCredentials) => {
+  const onSubmit = async (data: any) => {
     try {
       clearError();
       await registerUser(data);
@@ -79,15 +75,15 @@ export const Register: React.FC = () => {
               helperText={errors.password?.message}
             />
 
-            <TextField
+            {/* <TextField
               label="Confirm Password"
               type="password"
               variant="outlined"
-              {...register('confirmPassword')}
+              // {...register('confirmPassword')}
               defaultValue={"12345678"}
-              error={!!errors.confirmPassword}
-              helperText={errors.confirmPassword?.message}
-            />
+              // error={!!errors.confirmPassword}
+              // helperText={errors.confirmPassword?.message}
+            /> */}
 
             {error && (
               <Typography color="error" variant="body2">
