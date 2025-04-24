@@ -28,7 +28,19 @@ async function bootstrap() {
     transform: true,
     transformOptions: { enableImplicitConversion: true },
   }));
-  app.enableCors();
+  
+  // CORS configuration
+  app.enableCors({
+    origin: [
+      process.env.FRONTEND_URL,
+      'http://localhost:5173',
+      'http://localhost:5174'
+    ].filter(Boolean),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  });
+  
   await app.listen(3001);
 }
 bootstrap(); 
