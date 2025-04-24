@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { HabitService } from './habit.service';
-import { CreateHabitDto } from './dto/create-habit.dto';
+import { HabitDto as CreateHabitDto } from './dto/habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

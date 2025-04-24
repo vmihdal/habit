@@ -1,8 +1,18 @@
 import { IsString, IsEnum, IsOptional, IsInt, IsDate, IsHexColor } from 'class-validator';
 import { HabitFrequency, HabitStatus } from '../enums/habit.enum';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { $Enums } from '@prisma/client';
+import { Type } from 'class-transformer';
 
-export class CreateHabitDto {
+export class HabitDto {
+  @ApiProperty({ 
+    description: 'The ID of the habit',
+    example: 1,
+    required: false
+  })
+  @IsOptional()
+  id?: number;
+
   @ApiProperty({ 
     description: 'The name of the habit',
     example: 'Daily Exercise',
@@ -12,13 +22,25 @@ export class CreateHabitDto {
   name: string;
 
   @ApiProperty({ 
-    enum: ['DAILY', 'WEEKLY', 'MONTHLY', 'CUSTOM'],
+    enum: $Enums.HabitFrequency,
     description: 'How often the habit should be performed',
     example: 'DAILY',
     required: true
   })
-  @IsEnum(HabitFrequency)
-  frequency: HabitFrequency;
+  @IsEnum($Enums.HabitFrequency)
+  frequency: $Enums.HabitFrequency;
+
+  @ApiProperty({ 
+    description: 'The start date of the habit',
+    example: '2024-03-26T00:00:00Z',
+    type: 'string',
+    format: 'date-time',
+    required: false
+  })
+  @IsDate()
+  @Type(() => Date)
+  @IsOptional()
+  startDate?: Date;
 
   @ApiPropertyOptional({ 
     description: 'The end date of the habit',
@@ -27,6 +49,7 @@ export class CreateHabitDto {
     format: 'date-time'
   })
   @IsDate()
+  @Type(() => Date)
   @IsOptional()
   endDate?: Date;
 
@@ -37,18 +60,19 @@ export class CreateHabitDto {
     format: 'date-time'
   })
   @IsDate()
+  @Type(() => Date)
   @IsOptional()
   reminder?: Date;
 
   @ApiPropertyOptional({ 
-    enum: ['ACTIVE', 'ARCHIVED', 'COMPLETED'],
+    enum: $Enums.HabitStatus,
     description: 'The current status of the habit',
     example: 'ACTIVE',
     default: 'ACTIVE'
   })
-  @IsEnum(HabitStatus)
+  @IsEnum($Enums.HabitStatus)
   @IsOptional()
-  status?: HabitStatus;
+  status?: $Enums.HabitStatus;
 
   @ApiPropertyOptional({ 
     description: 'The target number of days to complete the habit',

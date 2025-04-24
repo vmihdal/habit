@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateHabitDto } from './create-habit.dto';
+import { HabitDto as CreateHabitDto } from './habit.dto';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { HabitFrequency, HabitStatus } from '../enums/habit.enum';
 

@@ -1,34 +1,77 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { UserResponseDto, UpdateUserDto } from './dto/user.dto';
+import { HabitDto } from '../habit/dto/habit.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async createUser(email: string, password: string, name?: string) {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    return this.prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
+  async findOne(id: number): Promise<UserResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        habits: true,
       },
     });
-  }
 
-  async findUserByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email },
-    });
-  }
-
-  async validateUser(email: string, password: string) {
-    const user = await this.findUserByEmail(email);
-    if (user && await bcrypt.compare(password, user.password)) {
-      const { password, ...result } = user;
-      return result;
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
-    return null;
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      habits: user.habits.map(habit => ({
+        id: habit.id,
+        name: habit.name,
+        startDate: habit.startDate,
+        endDate: habit.endDate,
+        frequency: habit.frequency,
+        reminder: habit.reminder,
+        status: habit.status,
+        targetDays: habit.targetDays,
+        color: habit.color,
+      } as HabitDto)),
+    };
+  }
+
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
+    const updateData: any = { ...updateUserDto };
+
+    if (updateUserDto.password) {
+      updateData.password = await bcrypt.hash(updateUserDto.password, 10);
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: updateData,
+      include: {
+        habits: true,
+      },
+    });
+
+    return {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      name: updatedUser.name,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+      habits: updatedUser.habits.map(habit => ({
+        id: habit.id,
+        name: habit.name,
+        startDate: habit.startDate,
+        endDate: habit.endDate,
+        frequency: habit.frequency,
+        reminder: habit.reminder,
+        status: habit.status,
+        targetDays: habit.targetDays,
+        color: habit.color,
+      } as HabitDto)),
+    };
   }
 } 

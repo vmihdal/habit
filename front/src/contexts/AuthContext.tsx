@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       setState(prev => ({
         ...prev,
-        error: 'Invalid credentials',
+        error: 'Login failed: ' + error,
         loading: false,
       }));
     }
@@ -53,13 +53,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (credentials: RegisterCredentials) => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
-      const { token, user } = await authService.register(credentials);
-      authService.setToken(token);
-      setState(prev => ({ ...prev, user, token, loading: false }));
+      await authService.register(credentials);
+      // authService.setToken(access_token);
+      setState(prev => ({ ...prev, loading: false }));
     } catch (error) {
       setState(prev => ({
         ...prev,
-        error: 'Registration failed',
+        error: 'Registration failed: ' + error,
         loading: false,
       }));
     }
