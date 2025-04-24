@@ -4,15 +4,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { $Enums } from '@prisma/client';
 import { Type } from 'class-transformer';
 
-export class HabitDto {
-  @ApiProperty({ 
-    description: 'The ID of the habit',
-    example: 1,
-    required: false
-  })
-  @IsOptional()
-  id?: number;
-
+export class CreateHabitDto {
   @ApiProperty({ 
     description: 'The name of the habit',
     example: 'Daily Exercise',
@@ -93,4 +85,12 @@ export class HabitDto {
   @IsHexColor()
   @IsOptional()
   color?: string;
+}
+
+export class HabitDto extends CreateHabitDto {
+  @ApiProperty({ 
+    description: 'The ID of the habit',
+    example: 1
+  })
+  id: number;
 } 

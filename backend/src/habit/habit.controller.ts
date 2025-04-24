@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { HabitService } from './habit.service';
-import { HabitDto as CreateHabitDto } from './dto/habit.dto';
+import { CreateHabitDto, HabitDto } from './dto/habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -19,7 +19,7 @@ export class HabitController {
   @ApiResponse({ 
     status: 201, 
     description: 'The habit has been successfully created.',
-    type: CreateHabitDto
+    type: HabitDto
   })
   @ApiResponse({ status: 400, description: 'Bad request.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
@@ -32,7 +32,7 @@ export class HabitController {
   @ApiResponse({ 
     status: 200, 
     description: 'Return all habits.',
-    type: [CreateHabitDto]
+    type: [HabitDto]
   })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   findAll(@Req() req: RequestWithUser) {
@@ -45,12 +45,12 @@ export class HabitController {
   @ApiResponse({ 
     status: 200, 
     description: 'Return the habit.',
-    type: CreateHabitDto
+    type: HabitDto
   })
   @ApiResponse({ status: 404, description: 'Habit not found.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   findOne(@Req() req: RequestWithUser, @Param('id') id: string) {
-    return this.habitService.findOne(req.user.id, +id);
+    return this.habitService.findOne(+id, req.user.id);
   }
 
   @Patch(':id')
@@ -60,13 +60,12 @@ export class HabitController {
   @ApiResponse({ 
     status: 200, 
     description: 'The habit has been successfully updated.',
-    type: CreateHabitDto
+    type: HabitDto
   })
   @ApiResponse({ status: 404, description: 'Habit not found.' })
-  @ApiResponse({ status: 400, description: 'Bad request.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   update(@Req() req: RequestWithUser, @Param('id') id: string, @Body() updateHabitDto: UpdateHabitDto) {
-    return this.habitService.update(req.user.id, +id, updateHabitDto);
+    return this.habitService.update(+id, req.user.id, updateHabitDto);
   }
 
   @Delete(':id')
@@ -79,7 +78,7 @@ export class HabitController {
   @ApiResponse({ status: 404, description: 'Habit not found.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   remove(@Req() req: RequestWithUser, @Param('id') id: string) {
-    return this.habitService.remove(req.user.id, +id);
+    return this.habitService.remove(+id, req.user.id);
   }
 
   @Get(':id/stats')

@@ -1,32 +1,55 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { HabitDto as CreateHabitDto } from './dto/habit.dto';
+import { CreateHabitDto, HabitDto } from './dto/habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
 
 @Injectable()
 export class HabitService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: number, createHabitDto: CreateHabitDto) {
-    return this.prisma.habit.create({
+  async create(userId: number, createHabitDto: CreateHabitDto): Promise<HabitDto> {
+    const habit = await this.prisma.habit.create({
       data: {
         ...createHabitDto,
         userId,
       },
     });
+
+    return {
+      id: habit.id,
+      name: habit.name,
+      frequency: habit.frequency,
+      startDate: habit.startDate,
+      endDate: habit.endDate,
+      reminder: habit.reminder,
+      status: habit.status,
+      targetDays: habit.targetDays,
+      color: habit.color,
+    };
   }
 
-  async findAll(userId: number) {
-    return this.prisma.habit.findMany({
+  async findAll(userId: number): Promise<HabitDto[]> {
+    const habits = await this.prisma.habit.findMany({
       where: { userId },
       orderBy: {
-        // createdAt: 'desc',
         startDate: 'desc',
       },
     });
+
+    return habits.map(habit => ({
+      id: habit.id,
+      name: habit.name,
+      frequency: habit.frequency,
+      startDate: habit.startDate,
+      endDate: habit.endDate,
+      reminder: habit.reminder,
+      status: habit.status,
+      targetDays: habit.targetDays,
+      color: habit.color,
+    }));
   }
 
-  async findOne(id: number, userId: number) {
+  async findOne(id: number, userId: number): Promise<HabitDto> {
     const habit = await this.prisma.habit.findFirst({
       where: {
         id,
@@ -38,10 +61,20 @@ export class HabitService {
       throw new NotFoundException(`Habit with ID ${id} not found`);
     }
 
-    return habit;
+    return {
+      id: habit.id,
+      name: habit.name,
+      frequency: habit.frequency,
+      startDate: habit.startDate,
+      endDate: habit.endDate,
+      reminder: habit.reminder,
+      status: habit.status,
+      targetDays: habit.targetDays,
+      color: habit.color,
+    };
   }
 
-  async update(id: number, userId: number, updateHabitDto: UpdateHabitDto) {
+  async update(id: number, userId: number, updateHabitDto: UpdateHabitDto): Promise<HabitDto> {
     const habit = await this.prisma.habit.findFirst({
       where: {
         id,
@@ -53,13 +86,25 @@ export class HabitService {
       throw new NotFoundException(`Habit with ID ${id} not found`);
     }
 
-    return this.prisma.habit.update({
+    const updatedHabit = await this.prisma.habit.update({
       where: { id },
       data: updateHabitDto,
     });
+
+    return {
+      id: updatedHabit.id,
+      name: updatedHabit.name,
+      frequency: updatedHabit.frequency,
+      startDate: updatedHabit.startDate,
+      endDate: updatedHabit.endDate,
+      reminder: updatedHabit.reminder,
+      status: updatedHabit.status,
+      targetDays: updatedHabit.targetDays,
+      color: updatedHabit.color,
+    };
   }
 
-  async remove(id: number, userId: number) {
+  async remove(id: number, userId: number): Promise<void> {
     const habit = await this.prisma.habit.findFirst({
       where: {
         id,
@@ -71,7 +116,7 @@ export class HabitService {
       throw new NotFoundException(`Habit with ID ${id} not found`);
     }
 
-    return this.prisma.habit.delete({
+    await this.prisma.habit.delete({
       where: { id },
     });
   }
