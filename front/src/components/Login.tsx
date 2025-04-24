@@ -1,6 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 import {
   Box,
@@ -19,6 +20,7 @@ const schema = yup.object().shape({
 });
 
 export const Login: React.FC = () => {
+  const navigate = useNavigate();
   const { login, error, clearError } = useAuth();
   const {
     register,
@@ -32,6 +34,7 @@ export const Login: React.FC = () => {
     try {
       clearError();
       await login(data);
+      navigate('/');
     } catch (err) {
       // Error is handled by the AuthContext
     }

@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { RegisterCredentials } from '../types/auth.types';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const schema = yup.object().shape({
   name: yup.string(),
@@ -23,6 +24,7 @@ const schema = yup.object().shape({
 });
 
 export const Register: React.FC = () => {
+  const navigate = useNavigate();
   const { register: registerUser, error, clearError } = useAuth();
   const {
     register,
@@ -36,6 +38,7 @@ export const Register: React.FC = () => {
     try {
       clearError();
       await registerUser(data);
+      navigate('/');  
     } catch (err) {
       // Error is handled by the AuthContext
     }
