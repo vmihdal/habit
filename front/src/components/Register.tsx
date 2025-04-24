@@ -54,6 +54,7 @@ export const Register: React.FC = () => {
               label="Name (Optional)"
               variant="outlined"
               {...register('name')}
+              defaultValue={"Test Account"}
               error={!!errors.name}
               helperText={errors.name?.message}
             />
@@ -63,6 +64,7 @@ export const Register: React.FC = () => {
               type="email"
               variant="outlined"
               {...register('email')}
+              defaultValue={"test@test.com"}
               error={!!errors.email}
               helperText={errors.email?.message}
             />
@@ -72,6 +74,7 @@ export const Register: React.FC = () => {
               type="password"
               variant="outlined"
               {...register('password')}
+              defaultValue={"12345678"}
               error={!!errors.password}
               helperText={errors.password?.message}
             />
@@ -81,6 +84,7 @@ export const Register: React.FC = () => {
               type="password"
               variant="outlined"
               {...register('confirmPassword')}
+              defaultValue={"12345678"}
               error={!!errors.confirmPassword}
               helperText={errors.confirmPassword?.message}
             />

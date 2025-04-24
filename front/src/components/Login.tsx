@@ -46,6 +46,7 @@ export const Login: React.FC = () => {
               label="Email"
               type="email"
               variant="outlined"
+              defaultValue={"test@test.com"}
               {...register('email')}
               error={!!errors.email}
               helperText={errors.email?.message}
@@ -55,6 +56,7 @@ export const Login: React.FC = () => {
               label="Password"
               type="password"
               variant="outlined"
+              defaultValue={"12345678"}
               {...register('password')}
               error={!!errors.password}
               helperText={errors.password?.message}
