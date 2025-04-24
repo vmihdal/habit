@@ -38,9 +38,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (credentials: LoginCredentials) => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
-      const { token, user } = await authService.login(credentials);
-      authService.setToken(token);
-      setState(prev => ({ ...prev, user, token, loading: false }));
+      const { access_token, user } = await authService.login(credentials);
+      authService.setToken(access_token);
+      setState(prev => ({ ...prev, user, token: access_token, loading: false }));
     } catch (error) {
       setState(prev => ({
         ...prev,
