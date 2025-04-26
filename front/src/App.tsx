@@ -6,6 +6,7 @@ import { Register } from './components/Register';
 import { Navigation } from './components/Navigation';
 import { Home } from './components/Home';
 import { HabitHome } from './components/HabitHome';
+import { HabitLogin } from './components/HabitLogin';
 
 const theme = createTheme({
   typography: {
@@ -99,6 +100,14 @@ const AppRoutes = () => {
           element={
             <PublicRoute>
               <HabitHome/>
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <HabitLogin/>
             </PublicRoute>
           }
         />
