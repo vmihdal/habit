@@ -5,24 +5,9 @@ import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { Navigation } from './components/Navigation';
 import { Home } from './components/Home';
+import { HabitHome } from './components/HabitHome';
 
 const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2563eb', // Vibrant blue
-      light: '#60a5fa',
-      dark: '#1e40af',
-    },
-    secondary: {
-      main: '#7c3aed', // Purple
-      light: '#a78bfa',
-      dark: '#5b21b6',
-    },
-    background: {
-      default: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
-      paper: 'rgba(255, 255, 255, 0.9)',
-    },
-  },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     h4: {
@@ -33,7 +18,7 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundImage: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+          background: "black",
           backgroundAttachment: 'fixed',
           minHeight: '100vh',
         },
@@ -83,9 +68,9 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const AppRoutes = () => {
   return (
     <>
-      <Navigation />
+      {/* <Navigation /> */}
       <Routes>
-        <Route
+        {/* <Route
           path="/login"
           element={
             <PublicRoute>
@@ -100,19 +85,40 @@ const AppRoutes = () => {
               <Register />
             </PublicRoute>
           }
-        />
-        <Route
+        /> */}
+        {/* <Route
           path="/"
           element={
             <PrivateRoute>
               <Home />
             </PrivateRoute>
           }
+        /> */}
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <HabitHome/>
+            </PublicRoute>
+          }
         />
       </Routes>
     </>
   );
 };
+
+// const App = () => {
+//   return (
+//     <ThemeProvider theme={theme}>
+//       <CssBaseline />
+//       <Router>
+//         <AuthProvider>
+//           <AppRoutes />
+//         </AuthProvider>
+//       </Router>
+//     </ThemeProvider>
+//   );
+// };
 
 const App = () => {
   return (
