@@ -8,7 +8,7 @@ import { Home } from './components/Home';
 import { HabitHome } from './components/HabitHome';
 import { HabitLogin } from './components/HabitLogin';
 import { HabitRegister } from './components/HabitRegister';
-
+import { HabitProfile } from './components/dashboard/HabitProfile';
 const theme = createTheme({
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -117,6 +117,14 @@ const AppRoutes = () => {
           element={
             <PublicRoute>
               <HabitLogin/>
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <PublicRoute>
+              <HabitProfile />
             </PublicRoute>
           }
         />
