@@ -107,7 +107,7 @@ export const GoalsList = () => {
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" my={4}>
-        <CircularProgress />
+        <CircularProgress sx={{ color: 'black' }} />
       </Box>
     );
   }

@@ -2,9 +2,9 @@ import { React, useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserDto } from '../../types/user.types';
 import { useNavigate } from 'react-router-dom';
-import { Container, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Button, Container, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { GoalsList } from "./sections/GoalsList";
-
+import { Add as AddIcon } from '@mui/icons-material';
 export const HabitProfile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserDto | null>(null);
@@ -28,12 +28,31 @@ export const HabitProfile = () => {
             src="/frame-13838-2.svg" 
             style={{ marginBottom: "2rem" }}
           />
-      <Typography variant="subtitle1" sx={{ mb: 4 }}>
+    
+      <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 2,
+      }}
+    >
+        <Typography variant="h6">
         {new Date().toLocaleDateString('uk-UA', { 
           month: 'long',
           day: 'numeric'
         })}
       </Typography>
+      <Button
+        variant="text"
+        startIcon={<AddIcon/>}
+        onClick={() => navigate('/add-habit')}
+        sx={{
+          color: 'black',
+        }}
+      >
+      </Button>
+    </Box>
       <GoalsList />
     </Container>
   );
