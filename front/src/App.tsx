@@ -9,6 +9,9 @@ import { HabitHome } from './components/HabitHome';
 import { HabitLogin } from './components/HabitLogin';
 import { HabitRegister } from './components/HabitRegister';
 import { HabitProfile } from './components/dashboard/HabitProfile';
+import { HabitCreate } from './components/HabitCreate';
+import { Playground } from './components/Playground';
+
 const theme = createTheme({
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -125,6 +128,22 @@ const AppRoutes = () => {
           element={
             <PublicRoute>
               <HabitProfile />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/add-habit"
+          element={
+            <PublicRoute>
+              <HabitCreate />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/playground"
+          element={
+            <PublicRoute>
+              <Playground />
             </PublicRoute>
           }
         />
