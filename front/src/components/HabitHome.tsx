@@ -38,8 +38,6 @@ export const HabitHome = () => {
           MyHabit
         </Typography>
 
-        
-
         <Button
       variant="contained"
       endIcon={<ArrowForwardIcon />}

@@ -2,6 +2,12 @@ import React from "react";
 import { Button, TextField, Divider, Box, Typography, Container, useTheme, useMediaQuery } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
+import { LoginCredentials } from '../types/auth.types';
+import * as yup from 'yup';
+import { useAuth } from '../contexts/AuthContext';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+
 const StyledButton = styled(Button)({
   textTransform: "none",
   padding: "12px 16px",
@@ -19,11 +25,36 @@ const SocialButton = styled(StyledButton)({
   }
 });
 
-export const HabitLogin = () => {
+const schema = yup.object().shape({
+  email: yup.string().email('Invalid email').required('Email is required'),
+  password: yup.string().required('Password is required'),
+});
+
+export const HabitLogin: React.FC = () => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
+  const { login, token, error, clearError } = useAuth();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginCredentials>({
+    resolver: yupResolver(schema),
+  });
+
+  const onSubmit = async (data: LoginCredentials) => {
+    try {
+      clearError();
+      let result = await login(data);
+      if (result) {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      // Error is handled by the AuthContext
+    }
+  };
 
   const socialLoginOptions = [
     {
@@ -58,6 +89,7 @@ export const HabitLogin = () => {
         position: "relative"
       }}
     >
+      <form onSubmit={handleSubmit(onSubmit)}>
       {/* Main content container */}
       <Box sx={{ 
         width: "100%",
@@ -98,6 +130,10 @@ export const HabitLogin = () => {
                   "& fieldset": { border: "none" }
                 }
               }}
+              defaultValue={"test@test.com"}
+              {...register('email')}
+              error={!!errors.email}
+              helperText={errors.email?.message}
             />
             <TextField
               fullWidth
@@ -111,10 +147,21 @@ export const HabitLogin = () => {
                   "& fieldset": { border: "none" }
                 }
               }}
+              defaultValue={"12345678"}
+              {...register('password')}
+              error={!!errors.password}
+              helperText={errors.password?.message}
             />
           </Box>
 
+          {error && (
+              <Typography color="error" variant="body2">
+                {error}
+              </Typography>
+          )}
+
           <StyledButton
+            type="submit"
             variant="contained"
             sx={{
               bgcolor: "rgba(2, 6, 24, 1)",
@@ -123,6 +170,7 @@ export const HabitLogin = () => {
                 bgcolor: "rgba(2, 6, 24, 0.9)",
               }
             }}
+            disabled={isSubmitting}
           >
             Увійти
           </StyledButton>
@@ -163,6 +211,7 @@ export const HabitLogin = () => {
           </Box>
         </Box>
       </Box>
+      </form>
     </Container>
   );
 }; 

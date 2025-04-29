@@ -1,11 +1,14 @@
-import { React, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserDto } from '../../types/user.types';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Container, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { GoalsList } from "./sections/GoalsList";
 import { Add as AddIcon } from '@mui/icons-material';
-export const HabitProfile = () => {
+import { LogoutButton } from '../LogoutButton';
+
+export const HabitProfile: React.FC = () => {
+
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,14 +24,27 @@ export const HabitProfile = () => {
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-     <img 
+      <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}
+    >
+<img 
             width={isMobile ? "150" : "200"} 
             height={isMobile ? "43.24" : "57.65"} 
             alt="Logo" 
             src="/frame-13838-2.svg" 
             style={{ marginBottom: "2rem" }}
           />
-    
+        <Box sx={{
+          justifyContent: 'flex-end',
+        }}>
+            <LogoutButton />
+          </Box>
+    </Box>
+     
       <Box
       sx={{
         display: 'flex',
@@ -43,6 +59,7 @@ export const HabitProfile = () => {
           day: 'numeric'
         })}
       </Typography>
+      
       <Button
         variant="text"
         startIcon={<AddIcon/>}
@@ -53,7 +70,7 @@ export const HabitProfile = () => {
       >
       </Button>
     </Box>
-      <GoalsList />
+      {/* <GoalsList /> */}
     </Container>
   );
 }; 

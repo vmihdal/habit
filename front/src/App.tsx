@@ -3,7 +3,6 @@ import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
-import { Navigation } from './components/Navigation';
 import { Home } from './components/Home';
 import { HabitHome } from './components/HabitHome';
 import { HabitLogin } from './components/HabitLogin';
@@ -60,7 +59,7 @@ const theme = createTheme({
   },
 });
 
-const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { token } = useAuth();
   return token ? <>{children}</> : <Navigate to="/login" />;
 };
@@ -73,78 +72,45 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const AppRoutes = () => {
   return (
     <>
-      {/* <Navigation /> */}
       <Routes>
-        {/* <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
-          }
-        /> */}
-        {/* <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Home />
-            </PrivateRoute>
-          }
-        /> */}
         <Route
           path="/"
           element={
-            <PublicRoute>
               <HabitHome/>
-            </PublicRoute>
           }
         />
         <Route
           path="/register"
           element={
-            <PublicRoute>
               <HabitRegister/>
-            </PublicRoute>
           }
         />
         <Route
           path="/login"
           element={
-            <PublicRoute>
               <HabitLogin/>
-            </PublicRoute>
           }
         />
         <Route
           path="/dashboard"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <HabitProfile />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/add-habit"
           element={
-            <PublicRoute>
+            <ProtectedRoute>
               <HabitCreate />
-            </PublicRoute>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/playground"
           element={
-            <PublicRoute>
               <Playground />
-            </PublicRoute>
           }
         />
       </Routes>

@@ -41,12 +41,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { access_token, user } = await authService.login(credentials);
       authService.setToken(access_token);
       setState(prev => ({ ...prev, user, token: access_token, loading: false }));
+      return true;
     } catch (error) {
       setState(prev => ({
         ...prev,
         error: 'Login failed: ' + error,
         loading: false,
       }));
+      return false;
     }
   };
 
@@ -56,12 +58,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await authService.register(credentials);
       // authService.setToken(access_token);
       setState(prev => ({ ...prev, loading: false }));
+      return true;
     } catch (error) {
       setState(prev => ({
         ...prev,
         error: 'Registration failed: ' + error,
         loading: false,
       }));
+      return false;
     }
   };
 

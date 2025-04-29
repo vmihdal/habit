@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, TextField, Divider, Box, Typography, Container, useTheme, useMediaQuery } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
+import * as yup from 'yup';
+import { useAuth } from '../contexts/AuthContext';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+
 const StyledButton = styled(Button)({
   textTransform: "none",
   padding: "12px 16px",
@@ -19,11 +24,40 @@ const SocialButton = styled(StyledButton)({
   }
 });
 
-export const HabitRegister = () => {
+const schema = yup.object().shape({
+  name: yup.string(),
+  email: yup.string().email('Invalid email').required('Email is required'),
+  password: yup
+    .string()
+    .required('Password is required')
+    .min(6, 'Password must be at least 6 characters'),
+});
+
+export const HabitRegister: React.FC = () => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
+  const { register: registerUser, error, clearError } = useAuth();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
+
+  const [registerStatus, setRegisterStatus] = useState<boolean>(false);
+
+  const onSubmit = async (data: any) => {
+    try {
+      clearError();
+      let result = await registerUser(data);
+      setRegisterStatus(result);
+    } catch (err) {
+      // Error is handled by the AuthContext
+    }
+  };
 
   const socialLoginOptions = [
     {
@@ -58,6 +92,7 @@ export const HabitRegister = () => {
         position: "relative"
       }}
     >
+       <form onSubmit={handleSubmit(onSubmit)}>
       {/* Main content container */}
       <Box sx={{ 
         width: "100%",
@@ -91,6 +126,10 @@ export const HabitRegister = () => {
               fullWidth
               placeholder="Ім'я"
               variant="outlined"
+              {...register('name')}
+              defaultValue={"Test Account"}
+              error={!!errors.name}
+              helperText={errors.name?.message}
               sx={{
                 bgcolor: "rgba(229, 231, 235, 1)",
                 borderRadius: "8px",
@@ -103,6 +142,10 @@ export const HabitRegister = () => {
               fullWidth
               placeholder="Email"
               variant="outlined"
+              {...register('email')}
+              defaultValue={"test@test.com"}
+              error={!!errors.email}
+              helperText={errors.email?.message}
               sx={{
                 bgcolor: "rgba(229, 231, 235, 1)",
                 borderRadius: "8px",
@@ -116,6 +159,10 @@ export const HabitRegister = () => {
               type="password"
               placeholder="Пароль"
               variant="outlined"
+              {...register('password')}
+              defaultValue={"12345678"}
+              error={!!errors.password}
+              helperText={errors.password?.message}
               sx={{
                 bgcolor: "rgba(229, 231, 235, 1)",
                 borderRadius: "8px",
@@ -126,8 +173,22 @@ export const HabitRegister = () => {
             />
           </Box>
 
+          {error && (
+              <Typography color="error" variant="body2">
+                {error}
+              </Typography>
+            )}
+
+            {registerStatus && (
+              <Typography color="success" variant="body2">
+                Реєстрація пройшла успішно. Ви будете перенаправлені на сторінку входу.
+              </Typography>
+            )}
+
           <StyledButton
             variant="contained"
+            type="submit"
+            disabled={isSubmitting}
             sx={{
               bgcolor: "rgba(2, 6, 24, 1)",
               color: "white",
@@ -175,6 +236,7 @@ export const HabitRegister = () => {
           </Box>
         </Box>
       </Box>
+      </form>
     </Container>
   );
 }; 
