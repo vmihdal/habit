@@ -1,41 +1,108 @@
-import React from "react";
-import { Button, TextField, Select, Divider, Box, Typography, Container, useTheme, useMediaQuery, MenuItem } from "@mui/material";
+import React, { useState } from "react";
+import {
+  Button,
+  TextField,
+  Select,
+  Divider,
+  Box,
+  Typography,
+  Container,
+  useTheme,
+  useMediaQuery,
+  MenuItem,
+  Alert,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
+import axios from "axios";
 
 const StyledButton = styled(Button)({
   textTransform: "none",
   padding: "12px 16px",
   borderRadius: "10px",
-  width: "100%"
+  width: "100%",
+});
+
+interface FormData {
+  name: string;
+}
+
+const schema = yup.object().shape({
+  name: yup
+    .string()
+    .required("Назва обов'язкова")
+    .min(2, "Назва повинна містити щонайменше 2 символи")
+    .max(50, "Назва не може перевищувати 50 символів")
+    .matches(
+      /^[а-яА-ЯґҐєЄіІїЇ\s\d]+$/,
+      "Назва повинна містити тільки українські літери, цифри та пробіли"
+    ),
 });
 
 export const HabitCreate = () => {
-
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
-  const schema = yup.object().shape({
-  });
+  const [duration, setDuration] = useState("month");
+  const [frequency, setFrequency] = useState("daily");
+  const [startDate, setStartDate] = useState("today");
+  const [reminder, setReminder] = useState("19:30");
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm({
+  } = useForm<FormData>({
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: FormData) => {
     try {
-      // await registerUser(data);
-      navigate('/dashboard');
+      setError(null);
+
+      const habitData = {
+        name: data.name,
+        frequency: frequency.toUpperCase(),
+        startDate: new Date(),
+        reminder: new Date(`2000-01-01T${reminder}:00`),
+        targetDays: duration === "month" ? 30 : 7,
+        color: "#FF5733", // Default color
+      };
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Будь ласка, увійдіть в систему");
+        return;
+      }
+
+      await axios.post("http://localhost:3001/habits", habitData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      navigate("/dashboard");
     } catch (err) {
-      // Error is handled by the AuthContext
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          setError(err.response.data.message || "Помилка при створенні звички");
+        } else if (err.request) {
+          setError(
+            "Не вдалося підключитися до сервера. Перевірте, чи запущений бекенд"
+          );
+        } else {
+          setError("Сталася помилка при відправці запиту");
+        }
+      } else {
+        setError("Невідома помилка");
+      }
+      console.error("Error creating habit:", err);
     }
   };
 
@@ -50,23 +117,33 @@ export const HabitCreate = () => {
         alignItems: "center",
         justifyContent: "center",
         p: 0,
-        position: "relative"
+        position: "relative",
       }}
     >
-      <form onSubmit={handleSubmit(onSubmit)} style={{
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        flexGrow: 1, // <- Optional: allows children to expand normally
-      }}>
-        {/* Main content container */}
-        <Box sx={{
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        style={{
+          display: "flex",
+          flexDirection: "column",
           width: "100%",
-          maxWidth: { xs: "342px", sm: "450px" },
-          mx: "auto",
-          mt: isMobile ? "80px" : 0,
-          p: { xs: 2, sm: 4 }
-        }}>
+          flexGrow: 1,
+        }}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: { xs: "342px", sm: "450px" },
+            mx: "auto",
+            mt: isMobile ? "80px" : 0,
+            p: { xs: 2, sm: 4 },
+          }}
+        >
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
           <Box sx={{ mb: 4 }}>
             <img
               width={isMobile ? "150" : "200"}
@@ -75,7 +152,10 @@ export const HabitCreate = () => {
               src="/frame-13838-2.svg"
               style={{ marginBottom: "2rem" }}
             />
-            <Typography variant={isMobile ? "h5" : "h6"} sx={{ fontWeight: 600, color: "rgba(2, 6, 24, 1)", mb: 1 }}>
+            <Typography
+              variant={isMobile ? "h5" : "h6"}
+              sx={{ fontWeight: 600, color: "rgba(2, 6, 24, 1)", mb: 1 }}
+            >
               Нова звичка
             </Typography>
           </Box>
@@ -86,63 +166,105 @@ export const HabitCreate = () => {
                 fullWidth
                 placeholder="Назва"
                 variant="outlined"
+                {...register("name")}
+                error={!!errors.name}
+                helperText={errors.name?.message}
+                inputProps={{
+                  maxLength: 50,
+                }}
                 sx={{
                   bgcolor: "rgb(154, 155, 157)",
                   borderRadius: "8px",
                   "& .MuiOutlinedInput-root": {
-                    "& fieldset": { border: "none" }
-                  }
+                    "& fieldset": { border: "none" },
+                  },
                 }}
               />
             </Box>
 
-            <Typography variant={isMobile ? "h5" : "h6"} sx={{ fontWeight: 600, color: "rgba(2, 6, 24, 1)", mb: 1 }}>
+            <Typography
+              variant={isMobile ? "h5" : "h6"}
+              sx={{ fontWeight: 600, color: "rgba(2, 6, 24, 1)", mb: 1 }}
+            >
               Налаштування
             </Typography>
 
             {[
-              { label: 'Тривалість', options: ['Місяць', 'Тиждень'], defaultValue: 'Місяць' },
-              { label: 'Повторення', options: ['Щоденно', 'Щотижня'], defaultValue: 'Щоденно' },
-              { label: 'Початок', options: ['Сьогодні', 'Завтра'], defaultValue: 'Сьогодні' },
-              { label: 'Нагадування', options: ['19:30', '20:00'], defaultValue: '19:30' },
-            ].map(({ label, options, defaultValue }, index) => (
+              {
+                label: "Тривалість",
+                value: duration,
+                setValue: setDuration,
+                options: [
+                  { value: "month", label: "Місяць" },
+                  { value: "week", label: "Тиждень" },
+                ],
+              },
+              {
+                label: "Повторення",
+                value: frequency,
+                setValue: setFrequency,
+                options: [
+                  { value: "daily", label: "Щоденно" },
+                  { value: "weekly", label: "Щотижня" },
+                  { value: "monthly", label: "Щомісяця" },
+                  { value: "custom", label: "Користувацька" },
+                ],
+              },
+              {
+                label: "Початок",
+                value: startDate,
+                setValue: setStartDate,
+                options: [
+                  { value: "today", label: "Сьогодні" },
+                  { value: "tomorrow", label: "Завтра" },
+                ],
+              },
+              {
+                label: "Нагадування",
+                value: reminder,
+                setValue: setReminder,
+                options: [
+                  { value: "19:30", label: "19:30" },
+                  { value: "20:00", label: "20:00" },
+                ],
+              },
+            ].map(({ label, value, setValue, options }, index) => (
               <Box key={label}>
                 <Box
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
                     py: 1,
                   }}
                 >
-                  <Typography color="text.secondary">
-                    {label}
-                  </Typography>
+                  <Typography color="text.secondary">{label}</Typography>
                   <Select
                     variant="standard"
-                    defaultValue={defaultValue}
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
                     disableUnderline
                     sx={{
                       minWidth: 100,
-                      textAlign: 'right',
-                      fontSize: '0.95rem',
+                      textAlign: "right",
+                      fontSize: "0.95rem",
                     }}
                   >
                     {options.map((option) => (
-                      <MenuItem key={option} value={option}>
-                        {option}
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
                       </MenuItem>
                     ))}
-                  </Select  >
+                  </Select>
                 </Box>
-                {/* Divider except after last item */}
                 {index !== 3 && <Divider />}
-              </Box>))}
+              </Box>
+            ))}
 
             <Typography
               variant="body2"
               color="primary"
-              sx={{ mt: 1, cursor: 'pointer' }}
+              sx={{ mt: 1, cursor: "pointer" }}
             >
               + Додати ціль...
             </Typography>
@@ -150,7 +272,7 @@ export const HabitCreate = () => {
             <Box sx={{ flexGrow: 1 }} />
 
             <Divider sx={{ my: 2 }} />
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: "flex", gap: 2 }}>
               <StyledButton
                 variant="contained"
                 sx={{
@@ -158,9 +280,9 @@ export const HabitCreate = () => {
                   color: "#000",
                   "&:hover": {
                     bgcolor: "#d6d9e0",
-                  }
+                  },
                 }}
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate("/dashboard")}
               >
                 Скасувати
               </StyledButton>
@@ -173,10 +295,10 @@ export const HabitCreate = () => {
                   color: "white",
                   "&:hover": {
                     bgcolor: "rgba(2, 6, 24, 0.9)",
-                  }
+                  },
                 }}
               >
-                {isSubmitting ? 'Створюємо...' : 'Створити звичку'}
+                {isSubmitting ? "Створюємо..." : "Створити звичку"}
               </StyledButton>
             </Box>
           </Box>
@@ -184,4 +306,4 @@ export const HabitCreate = () => {
       </form>
     </Container>
   );
-}; 
+};
