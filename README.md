@@ -9,6 +9,8 @@ cd backend
 docker compose up -d
 npm install
 npm run start:dev
+npm install @prisma/client
+npx prisma migrate dev
 ```
 
 Frontend:
