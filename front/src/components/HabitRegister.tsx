@@ -26,11 +26,11 @@ const SocialButton = styled(StyledButton)({
 
 const schema = yup.object().shape({
   name: yup.string(),
-  email: yup.string().email('Invalid email').required('Email is required'),
+  email: yup.string().email('Перевірте формат поля').required('Поле є обов\'язковим'),
   password: yup
     .string()
-    .required('Password is required')
-    .min(6, 'Password must be at least 6 characters'),
+    .required('Поле є обов\'язковим')
+    .min(6, 'Пароль має бути не менше 6 символів'),
 });
 
 export const HabitRegister: React.FC = () => {
@@ -142,7 +142,7 @@ export const HabitRegister: React.FC = () => {
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <TextField
                 fullWidth
-                placeholder="Ім'я"
+                placeholder="Ім'я (опціонально)"
                 variant="outlined"
                 {...register('name')}
                 defaultValue={"Test Account"}

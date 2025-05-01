@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       setState(prev => ({
         ...prev,
-        error: 'Login failed: ' + error,
+        error: "Помилка при вході",
         loading: false,
       }));
       return false;
@@ -56,13 +56,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       await authService.register(credentials);
-      // authService.setToken(access_token);
       setState(prev => ({ ...prev, loading: false }));
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      let errorMessage = "Помилка при реєстрації";
+      
+      if (error.response?.status === 409) {
+        errorMessage = "Цей email вже зареєстрований";
+      }
+
       setState(prev => ({
         ...prev,
-        error: 'Registration failed: ' + error,
+        error: errorMessage,
         loading: false,
       }));
       return false;

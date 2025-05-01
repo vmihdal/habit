@@ -26,8 +26,8 @@ const SocialButton = styled(StyledButton)({
 });
 
 const schema = yup.object().shape({
-  email: yup.string().email('Invalid email').required('Email is required'),
-  password: yup.string().required('Password is required'),
+  email: yup.string().email('Перевірте формат поля').required('Поле є обов\'язковим'),
+  password: yup.string().required('Поле є обов\'язковим'),
 });
 
 export const HabitLogin: React.FC = () => {
