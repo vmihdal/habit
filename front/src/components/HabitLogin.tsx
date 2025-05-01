@@ -175,15 +175,15 @@ export const HabitLogin: React.FC = () => {
             Увійти
           </StyledButton>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {/* <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Divider sx={{ flex: 1 }} />
             <Typography sx={{ color: "rgba(2, 6, 24, 1)", fontSize: isMobile ? "14px" : "16px", fontFamily: "Rubik" }}>
               АБО
             </Typography>
             <Divider sx={{ flex: 1 }} />
-          </Box>
+          </Box> */}
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {/* <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {socialLoginOptions.map((option, index) => (
               <SocialButton 
                 key={index} 
@@ -208,7 +208,7 @@ export const HabitLogin: React.FC = () => {
                 </Typography>
               </SocialButton>
             ))}
-          </Box>
+          </Box> */}
         </Box>
       </Box>
       </form>

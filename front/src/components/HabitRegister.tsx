@@ -218,7 +218,7 @@ export const HabitRegister: React.FC = () => {
               Створити обліковий запис
             </StyledButton>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            {/* <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Divider sx={{ flex: 1 }} />
               <Typography sx={{ color: "rgba(2, 6, 24, 1)", fontSize: isMobile ? "14px" : "16px", fontFamily: "Rubik" }}>
                 АБО
@@ -251,7 +251,7 @@ export const HabitRegister: React.FC = () => {
                   </Typography>
                 </SocialButton>
               ))}
-            </Box>
+            </Box> */}
           </Box>
         </Box>
       </form>
