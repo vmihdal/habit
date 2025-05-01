@@ -18,6 +18,9 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
+
+const API_URL = 'http://localhost:3001';
 
 const StyledButton = styled(Button)({
   textTransform: "none",
@@ -33,7 +36,7 @@ interface FormData {
 const schema = yup.object().shape({
   name: yup
     .string()
-    .required("Назва обов'язкова")
+    .required("Обов'язкове поле")
     .min(2, "Назва повинна містити щонайменше 2 символи")
     .max(50, "Назва не може перевищувати 50 символів")
     .matches(
@@ -47,6 +50,7 @@ export const HabitCreate = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
 
   const [duration, setDuration] = useState("month");
   const [frequency, setFrequency] = useState("daily");
@@ -73,14 +77,13 @@ export const HabitCreate = () => {
         targetDays: duration === "month" ? 30 : 7,
         color: "#FF5733", // Default color
       };
+      // const token = localStorage.getItem("token");
+      // if (!token) {
+      //   setError("Будь ласка, увійдіть в систему");
+      //   return;
+      // }
 
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("Будь ласка, увійдіть в систему");
-        return;
-      }
-
-      await axios.post("http://localhost:3001/habits", habitData, {
+      await axios.post(`${API_URL}/habits`, habitData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -92,13 +95,14 @@ export const HabitCreate = () => {
       if (axios.isAxiosError(err)) {
         if (err.response) {
           setError(err.response.data.message || "Помилка при створенні звички");
-        } else if (err.request) {
-          setError(
-            "Не вдалося підключитися до сервера. Перевірте, чи запущений бекенд"
-          );
-        } else {
-          setError("Сталася помилка при відправці запиту");
         }
+        // } else if (err.request) {
+        //   setError(
+        //     "Не вдалося підключитися до сервера. Перевірте, чи запущений бекенд"
+        //   );
+        // } else {
+        //   setError("Сталася помилка при відправці запиту");
+        // }
       } else {
         setError("Невідома помилка");
       }
@@ -138,10 +142,15 @@ export const HabitCreate = () => {
             p: { xs: 2, sm: 4 },
           }}
         >
-          {error && (
+          {/* {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
             </Alert>
+          )} */}
+           {error && (
+              <Typography color="error" variant="body2">
+                {error}
+              </Typography>
           )}
 
           <Box sx={{ mb: 4 }}>
