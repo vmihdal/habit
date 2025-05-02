@@ -54,4 +54,20 @@ export class UpdateHabitDto extends PartialType(CreateHabitDto) {
     pattern: '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
   })
   color?: string;
+
+  @ApiPropertyOptional({ 
+    description: 'The custom dates of the habit',
+    example: ['2024-03-26T00:00:00Z', '2024-03-27T00:00:00Z'],
+    type: 'array',
+    items: { type: 'string', format: 'date-time' }
+  })
+  customDates?: Date[];
+
+  @ApiPropertyOptional({ 
+    description: 'The dates when the habit was completed',
+    example: ['2024-03-26T00:00:00Z', '2024-03-27T00:00:00Z'],
+    type: 'array',
+    items: { type: 'string', format: 'date-time' }
+  })
+  doneDates?: Date[];      
 } 

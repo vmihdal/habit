@@ -70,7 +70,7 @@ export const HabitProfile: React.FC = () => {
       >
       </Button>
     </Box>
-      {/* <GoalsList /> */}
+      <GoalsList />
     </Container>
   );
 }; 

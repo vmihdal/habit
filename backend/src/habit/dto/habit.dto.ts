@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsOptional, IsInt, IsDate, IsHexColor } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsInt, IsDate, IsHexColor, IsArray } from 'class-validator';
 import { HabitFrequency, HabitStatus } from '../enums/habit.enum';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { $Enums } from '@prisma/client';
@@ -85,6 +85,27 @@ export class CreateHabitDto {
   @IsHexColor()
   @IsOptional()
   color?: string;
+
+  @ApiPropertyOptional({ 
+    description: 'The custom dates of the habit',
+    example: ['2024-03-26T00:00:00Z', '2024-03-27T00:00:00Z'],
+    type: 'array',
+    items: { type: 'string', format: 'date-time' }
+  })
+  @IsArray()
+  @IsOptional()
+  customDates?: Date[];
+
+  @ApiPropertyOptional({ 
+    description: 'The dates when the habit was completed',
+    example: ['2024-03-26T00:00:00Z', '2024-03-27T00:00:00Z'],
+    type: 'array',
+    items: { type: 'string', format: 'date-time' }
+  })      
+  @IsArray()
+  @IsOptional()
+  doneDates?: Date[];
+  
 }
 
 export class HabitDto extends CreateHabitDto {

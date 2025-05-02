@@ -25,6 +25,8 @@ model Habit {
   startDate   DateTime       @default(now())
   endDate     DateTime?      // Optional end date for habit
   frequency  HabitFrequency @default(DAILY)
+  customDates DateTime[]
+  doneDates   DateTime[]
   reminder    DateTime?      // Optional reminder time
   status      HabitStatus    @default(ACTIVE)
   targetDays  Int?
@@ -37,8 +39,6 @@ model Habit {
 
 enum HabitFrequency {
   DAILY
-  WEEKLY
-  MONTHLY
   CUSTOM
 }
 

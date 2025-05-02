@@ -1,92 +1,122 @@
 import { CircularProgress, Grid, Paper, Typography, IconButton, Box, Divider } from '@mui/material';
 import { MoreVert as MoreVertIcon, Close as CloseIcon } from '@mui/icons-material';
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useAuth } from '../../../contexts/AuthContext';
 
-export interface Goal {
-    id: string;
-    title: string;
-    progress: number;
-    activeDays: string[];
-    disabledDays?: string[];
-  }
-  
-  export interface GoalsResponse {
-    goals: Goal[];
-    totalGoals: number;
-    completedGoals: number;
-  }
+enum HabitFrequency {
+  DAILY = 'DAILY',
+  CUSTOM = 'CUSTOM'
+}
 
-const weekDays = [
-    { id: "mon", label: "Пн" },
-    { id: "tue", label: "Вт" },
-    { id: "wed", label: "Ср" },
-    { id: "thu", label: "Чт" },
-    { id: "fri", label: "Пт" },
-    { id: "sat", label: "Сб" },
-    { id: "sun", label: "Нд" },
-  ];
+enum HabitStatus {
+  ACTIVE = 'ACTIVE',
+  ARCHIVED = 'ARCHIVED',
+  COMPLETED = 'COMPLETED'
+}
 
-// Simulate API delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Base habit interface for creating new habits
+interface Habit {
+  id: number;
+  name: string;
+  frequency: HabitFrequency;
+  startDate?: Date;
+  endDate?: Date;
+  reminder?: Date;
+  status?: HabitStatus;
+  targetDays?: number;
+  color?: string;  // Hex color format (#RRGGBB or #RGB)
+  customDates?: Date[];
+  doneDates?: Date[];
+}
 
-export const fetchGoals = async (): Promise<GoalsResponse> => {
-  try {
-    // Simulate API call delay
-    await delay(1000);
-    return mockGoalsData;
-  } catch (error) {
-    console.error('Error fetching goals:', error);
-    throw error;
-  }
-};
+// Helper: get Monday of the current week
+function getStartOfWeek(date = new Date()): Date {
+  const day = date.getDay(); // 0 (Sun) - 6 (Sat)
+  const diff = (day === 0 ? -6 : 1) - day; // Monday as first day
+  const monday = new Date(date);
+  monday.setDate(date.getDate() + diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
 
-export const mockGoalsData: GoalsResponse = {
-    goals: [
-      {
-        id: '1',
-        title: 'Гітара',
-        progress: 60,
-        activeDays: ['mon', 'wed', 'fri'],
-        disabledDays: ['sun']
-      },
-      {
-        id: '2',
-        title: 'Читання',
-        progress: 80,
-        activeDays: ['mon', 'tue', 'wed', 'thu', 'fri'],
-        disabledDays: ['sat', 'sun']
-      },
-      {
-        id: '3',
-        title: 'Вокал',
-        progress: 40,
-        activeDays: ['tue', 'thu'],
-        disabledDays: ['mon', 'wed', 'fri', 'sat', 'sun']
-      },
-      {
-        id: '4',
-        title: 'Front-End Курс',
-        progress: 90,
-        activeDays: ['mon', 'wed', 'fri'],
-        disabledDays: ['tue', 'thu', 'sat', 'sun']
-      },
-      {
-        id: '5',
-        title: 'Тренування',
-        progress: 70,
-        activeDays: ['mon', 'tue', 'thu', 'fri'],
-        disabledDays: ['wed', 'sat', 'sun']
-      }
-    ],
-    totalGoals: 5,
-    completedGoals: 2
+// Generate array of { label, date } for current week
+const weekDays = Array.from({ length: 7 }).map((_, i) => {
+  const monday = getStartOfWeek();
+  const date = new Date(monday);
+  date.setDate(monday.getDate() + i);
+  return {
+    id: i,
+    date,
   };
+});
+
+
+const API_URL = 'http://localhost:3001';
+
+// export const mockGoalsData: [Habit] = {
+//     goals: [
+//       {
+//         id: '1',
+//         title: 'Гітара',
+//         progress: 60,
+//         activeDays: ['mon', 'wed', 'fri'],
+//         disabledDays: ['sun']
+//       },
+//       {
+//         id: '2',
+//         title: 'Читання',
+//         progress: 80,
+//         activeDays: ['mon', 'tue', 'wed', 'thu', 'fri'],
+//         disabledDays: ['sat', 'sun']
+//       },
+//       {
+//         id: '3',
+//         title: 'Вокал',
+//         progress: 40,
+//         activeDays: ['tue', 'thu'],
+//         disabledDays: ['mon', 'wed', 'fri', 'sat', 'sun']
+//       },
+//       {
+//         id: '4',
+//         title: 'Front-End Курс',
+//         progress: 90,
+//         activeDays: ['mon', 'wed', 'fri'],
+//         disabledDays: ['tue', 'thu', 'sat', 'sun']
+//       },
+//       {
+//         id: '5',
+//         title: 'Тренування',
+//         progress: 70,
+//         activeDays: ['mon', 'tue', 'thu', 'fri'],
+//         disabledDays: ['wed', 'sat', 'sun']
+//       }
+//     ],
+//     totalGoals: 5,
+//     completedGoals: 2
+//   };
 
 export const GoalsList = () => {
 
-    const [loading, setLoading] = useState(true);
+  const { token } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [goalsData, setGoalsData] = useState<GoalsResponse | null>(null);
+  const [habits, setGoalsData] = useState<[Habit] | null>(null);
+
+  const fetchGoals = async (): Promise<[Habit]> => {
+    try {
+      const response = await axios.get<[Habit]>(`${API_URL}/habits`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      return response.data as [Habit];
+    } catch (error) {
+      console.error('Error fetching goals:', error);
+      throw error;
+    }
+  };
 
 
   useEffect(() => {
@@ -120,11 +150,12 @@ export const GoalsList = () => {
     );
   }
 
-  if (!goalsData || !goalsData.goals) {
+  if (!habits) {
     return null;
   }
 
-  const { goals, completedGoals, totalGoals } = goalsData;
+  const total = habits.length;
+  const completed = habits.filter((goal) => goal.status === HabitStatus.COMPLETED).length;
 
   return (
     <Grid container spacing={3}>
@@ -148,7 +179,7 @@ export const GoalsList = () => {
           >
             <Typography variant="h6">У тебе все вийде!</Typography>
             <Typography variant="body2">
-              {completedGoals}/{totalGoals} цілей виконано
+              {completed}/{total} цілей виконано
             </Typography>
           </Box>
     <Box
@@ -209,7 +240,7 @@ export const GoalsList = () => {
             component="div"
             color="white"
           >
-             {Math.round((completedGoals / totalGoals) * 100)}%
+             {total ? Math.round((completed / total) * 100) : 0} %
           </Typography>
         </Box>
       </Box>
@@ -217,11 +248,12 @@ export const GoalsList = () => {
       </Paper>
     </Grid>
 
-    {goals.map((goal, index) => (
-      <Grid size={{xs: 12}} key={goal.id}>
+    {habits.map((habit, index) => (
+
+      <Grid size={{xs: 12}} key={habit.id}>
         <Paper sx={{ p: 2 }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h6">{goal.title}</Typography>
+            <Typography variant="h6">{habit.name}</Typography>
             <IconButton size="small">
               <MoreVertIcon />
             </IconButton>
@@ -229,8 +261,27 @@ export const GoalsList = () => {
 
           <Grid container spacing={1}>
             {weekDays.map((day) => {
-              const isActive = goal.activeDays.includes(day.id);
-              const isDisabled = goal.disabledDays?.includes(day.id);
+              let isActive = habit.frequency === HabitFrequency.DAILY;
+
+              if (habit.frequency === HabitFrequency.CUSTOM && habit.customDates) {
+                isActive = habit.customDates.find(date => {
+                  const d = new Date(date);
+                  return (
+                    d.getFullYear() === day.date.getFullYear() &&
+                    d.getMonth() === day.date.getMonth() &&
+                    d.getDate() === day.date.getDate()
+                  );
+                }) !== undefined;
+              }
+
+              let isDone = habit.doneDates?.find(date => {
+                const d = new Date(date);
+                return (
+                  d.getFullYear() === day.date.getFullYear() &&
+                  d.getMonth() === day.date.getMonth() &&
+                  d.getDate() === day.date.getDate()
+                ) !== undefined;
+              }) !== undefined;
 
               return (
                 <Grid key={day.id}>
@@ -240,28 +291,33 @@ export const GoalsList = () => {
                       height: 40,
                       border: 1,
                       borderStyle: isActive ? 'dashed' : 'solid',
-                      borderColor: isDisabled ? 'grey.300' : 'black',
+                      borderColor: 'black',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: isActive ? 'black' : 'grey.500'
+                      color: isActive ? isDone ? 'white' : 'black' : 'grey.400',
+                      backgroundColor: isDone ? 'rgb(0, 0, 0)' : 'white',
+                      fillColor: isDone ? 'black' : 'white',
                     }}
                   >
-                    {isDisabled ? (
-                      <CloseIcon fontSize="small" />
-                    ) : (
+                    {/* {isActive ? (
                       <Typography variant="body2">
-                        {day.label}
+                        {day.date.toLocaleDateString('uk-UA', { weekday: 'short' })}
                       </Typography>
-                    )}
+                    ) : (
+                      <CloseIcon fontSize="small" />
+                    )} */}
+                    <Typography variant="body2">
+                        {day.date.toLocaleDateString('uk-UA', { weekday: 'short' })}
+                      </Typography>
                   </Box>
                 </Grid>
               );
             })}
           </Grid>
         </Paper>
-        {index < goals.length - 1 && <Divider sx={{ my: 2 }} />}
+        {index < total - 1 && <Divider sx={{ my: 2 }} />}
       </Grid>
     ))}
   </Grid>

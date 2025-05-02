@@ -25,6 +25,8 @@ export class HabitService {
       status: habit.status,
       targetDays: habit.targetDays,
       color: habit.color,
+      customDates: habit.customDates,
+      doneDates: [],
     };
   }
 
@@ -46,6 +48,8 @@ export class HabitService {
       status: habit.status,
       targetDays: habit.targetDays,
       color: habit.color,
+      customDates: habit.customDates,
+      doneDates: habit.doneDates,
     }));
   }
 
@@ -71,6 +75,8 @@ export class HabitService {
       status: habit.status,
       targetDays: habit.targetDays,
       color: habit.color,
+      customDates: habit.customDates,
+      doneDates: habit.doneDates,
     };
   }
 
@@ -101,6 +107,8 @@ export class HabitService {
       status: updatedHabit.status,
       targetDays: updatedHabit.targetDays,
       color: updatedHabit.color,
+      customDates: updatedHabit.customDates,  
+      doneDates: updatedHabit.doneDates,
     };
   }
 
@@ -143,6 +151,7 @@ export class HabitService {
       targetDays: habit.targetDays,
       status: habit.status,
       frequency: habit.frequency,
+      customDates: habit.customDates, 
     };
   }
 } 
