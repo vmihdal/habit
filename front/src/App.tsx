@@ -10,6 +10,7 @@ import { HabitRegister } from './components/HabitRegister';
 import { HabitProfile } from './components/dashboard/HabitProfile';
 import { HabitCreate } from './components/HabitCreate';
 import { Playground } from './components/Playground';
+import { ConfirmProvider } from './components/common/Confirmation';
 
 const theme = createTheme({
   typography: {
@@ -95,7 +96,9 @@ const AppRoutes = () => {
           path="/dashboard"
           element={
             <ProtectedRoute>
+               <ConfirmProvider>
               <HabitProfile />
+               </ConfirmProvider>
             </ProtectedRoute>
           }
         />
@@ -110,7 +113,9 @@ const AppRoutes = () => {
         <Route
           path="/playground"
           element={
+            <ConfirmProvider>
               <Playground />
+            </ConfirmProvider>
           }
         />
       </Routes>

@@ -1,8 +1,9 @@
-import { CircularProgress, Grid, Paper, Typography, IconButton, Box, Divider, Button, Tooltip } from '@mui/material';
+import { CircularProgress, Grid, Paper, Typography, IconButton, Box, Divider, Button, Tooltip, Menu, MenuItem } from '@mui/material';
 import { MoreVert as MoreVertIcon, EventBusy as EventBusyIcon } from '@mui/icons-material';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useConfirm } from '../../common/Confirmation';
 
 enum HabitFrequency {
   DAILY = 'DAILY',
@@ -54,54 +55,15 @@ const weekDays = Array.from({ length: 7 }).map((_, i) => {
 
 const API_URL = 'http://localhost:3001';
 
-// export const mockGoalsData: [Habit] = {
-//     goals: [
-//       {
-//         id: '1',
-//         title: 'Гітара',
-//         progress: 60,
-//         activeDays: ['mon', 'wed', 'fri'],
-//         disabledDays: ['sun']
-//       },
-//       {
-//         id: '2',
-//         title: 'Читання',
-//         progress: 80,
-//         activeDays: ['mon', 'tue', 'wed', 'thu', 'fri'],
-//         disabledDays: ['sat', 'sun']
-//       },
-//       {
-//         id: '3',
-//         title: 'Вокал',
-//         progress: 40,
-//         activeDays: ['tue', 'thu'],
-//         disabledDays: ['mon', 'wed', 'fri', 'sat', 'sun']
-//       },
-//       {
-//         id: '4',
-//         title: 'Front-End Курс',
-//         progress: 90,
-//         activeDays: ['mon', 'wed', 'fri'],
-//         disabledDays: ['tue', 'thu', 'sat', 'sun']
-//       },
-//       {
-//         id: '5',
-//         title: 'Тренування',
-//         progress: 70,
-//         activeDays: ['mon', 'tue', 'thu', 'fri'],
-//         disabledDays: ['wed', 'sat', 'sun']
-//       }
-//     ],
-//     totalGoals: 5,
-//     completedGoals: 2
-//   };
-
 export const GoalsList = () => {
 
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const confirm = useConfirm();
 
   const fetchGoals = async (): Promise<Habit[]> => {
     try {
@@ -202,6 +164,43 @@ export const GoalsList = () => {
     updateHabit();
   }
 
+  enum MenuCommand {
+    EDIT,
+    MARK_AS_COMPLETED,
+    DELETE
+  }
+
+  const handleMenuClick = (habit: Habit, cmd: MenuCommand) => {
+    setAnchorEl(null);
+    switch (cmd) {
+      case MenuCommand.EDIT:
+        console.log('EDIT');
+        break;
+      case MenuCommand.MARK_AS_COMPLETED:
+        console.log('MARK_AS_COMPLETED');
+        break;
+      case MenuCommand.DELETE:
+        confirm({
+          title: 'Видалення звички',
+          description: 'Ви впевнені, що хочете видалити цю звичку?',
+        }).then((confirmed) => {
+          if (confirmed) {
+            axios.delete(`${API_URL}/habits/${habit.id}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }).then(() => {
+              setHabits(prevItems =>
+                prevItems.filter(item => item.id !== habit.id)
+              );
+            });
+          }
+        });
+        break;
+    }
+  };
+
   return (
     <Grid container spacing={3}>
       <Grid size={{ xs: 12 }}>
@@ -298,9 +297,37 @@ export const GoalsList = () => {
           <Paper sx={{ p: 2 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
               <Typography variant="h6">{habit.name}</Typography>
-              <IconButton size="small">
+              <IconButton size="small" onClick={(event) => setAnchorEl(event.currentTarget)}>
                 <MoreVertIcon />
               </IconButton>
+              <Menu
+                id="basic-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={() => setAnchorEl(null)}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
+                slotProps={{
+                  paper: {
+                    elevation: 1,
+                    sx: {
+                      overflow: 'visible',
+                      filter: 'drop-shadow(0px 0px 0px rgba(136, 136, 136, 0.1))',
+                    },
+                  },
+                }}
+              >
+                <MenuItem onClick={() => handleMenuClick(habit, MenuCommand.EDIT)}>Редагувати</MenuItem>
+                <MenuItem onClick={() => handleMenuClick(habit, MenuCommand.MARK_AS_COMPLETED)}>Позначити як виконану</MenuItem>
+                <Divider />
+                <MenuItem onClick={() => handleMenuClick(habit, MenuCommand.DELETE)}><Typography color="error">Видалити</Typography></MenuItem>
+              </Menu>
             </Box>
 
             <Grid container spacing={1}>
