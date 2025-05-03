@@ -1,5 +1,5 @@
-import { CircularProgress, Grid, Paper, Typography, IconButton, Box, Divider } from '@mui/material';
-import { MoreVert as MoreVertIcon, Close as CloseIcon } from '@mui/icons-material';
+import { CircularProgress, Grid, Paper, Typography, IconButton, Box, Divider, Button, Tooltip } from '@mui/material';
+import { MoreVert as MoreVertIcon, EventBusy as EventBusyIcon } from '@mui/icons-material';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -101,11 +101,11 @@ export const GoalsList = () => {
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [habits, setGoalsData] = useState<[Habit] | null>(null);
+  const [habits, setHabits] = useState<Habit[]>([]);
 
-  const fetchGoals = async (): Promise<[Habit]> => {
+  const fetchGoals = async (): Promise<Habit[]> => {
     try {
-      const response = await axios.get<[Habit]>(`${API_URL}/habits`, {
+      const response = await axios.get<Habit[]>(`${API_URL}/habits`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -123,7 +123,7 @@ export const GoalsList = () => {
     const loadGoals = async () => {
       try {
         const data = await fetchGoals();
-        setGoalsData(data);
+        setHabits(data.sort((a, b) => b.id - a.id));
       } catch (err) {
         setError('Failed to load goals');
       } finally {
@@ -157,20 +157,65 @@ export const GoalsList = () => {
   const total = habits.length;
   const completed = habits.filter((goal) => goal.status === HabitStatus.COMPLETED).length;
 
+  const handleDayClick = (isActive: boolean, date: Date, habit: Habit) => {
+
+    if (!isActive) {
+      return;
+    }
+
+    if (habit.doneDates && habit.doneDates.length > 0) {
+      let i = habit.doneDates.findIndex(d => {
+        const date1 = new Date(d);
+        return (
+          date1.getFullYear() === date.getFullYear() &&
+          date1.getMonth() === date.getMonth() &&
+          date1.getDate() === date.getDate()
+        );
+      })
+
+      if (i !== -1) {
+        habit.doneDates.splice(i, 1);
+      } else {
+        habit.doneDates.push(date);
+      }
+    } else {
+      habit.doneDates = [date];
+    }
+
+    const updateHabit = async () => {
+      let updatedHabit = await axios.patch(`${API_URL}/habits/${habit.id}`, { doneDates: habit.doneDates }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      setHabits(prevItems =>
+        prevItems.map(item => {
+          if (item.id === habit.id) {
+            return { ...item, doneDates: habit.doneDates }
+          }
+          return item
+        })
+      );
+    }
+
+    updateHabit();
+  }
+
   return (
     <Grid container spacing={3}>
-    <Grid size={{xs: 12}}>
-      <Paper 
-        sx={{ 
-          p: 3, 
-          bgcolor: 'black',
-          color: 'primary.contrastText',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}
-      >
-         <Box
+      <Grid size={{ xs: 12 }}>
+        <Paper
+          sx={{
+            p: 3,
+            bgcolor: 'black',
+            color: 'primary.contrastText',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
+          <Box
             sx={{
               display: 'inline',
               flexDirection: 'column',
@@ -182,89 +227,98 @@ export const GoalsList = () => {
               {completed}/{total} цілей виконано
             </Typography>
           </Box>
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        backgroundColor: '#040616',
-        borderRadius: 2,
-        padding: 2,
-        width: '50%',
-        height: 150,
-      }}
-    >
-         
-      <Box
-        sx={{
-          position: 'relative',
-          display: 'inline-flex',
-        }}
-      >
-        {/* Background circle */}
-        <CircularProgress
-          variant="determinate"
-          value={100}
-          size={100}
-          thickness={5}
-          sx={{
-            color: '#2E2E3A', // Gray background ring
-            position: 'absolute', // Stack under
-          }}
-        />
-        {/* Foreground (actual progress) */}
-        <CircularProgress
-          variant="determinate"
-          value={25}
-          size={100}
-          thickness={5}
-          sx={{
-            color: '#1E90FF', // Active progress color
-          }}
-        />
-        {/* Centered text */}
-        <Box
-          sx={{
-            top: 0,
-            left: 0,
-            bottom: 0,
-            right: 0,
-            position: 'absolute',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Typography
-            variant="h6"
-            component="div"
-            color="white"
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              backgroundColor: '#040616',
+              borderRadius: 2,
+              padding: 2,
+              width: '50%',
+              height: 150,
+            }}
           >
-             {total ? Math.round((completed / total) * 100) : 0} %
-          </Typography>
-        </Box>
-      </Box>
-    </Box>
-      </Paper>
-    </Grid>
 
-    {habits.map((habit, index) => (
-
-      <Grid size={{xs: 12}} key={habit.id}>
-        <Paper sx={{ p: 2 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h6">{habit.name}</Typography>
-            <IconButton size="small">
-              <MoreVertIcon />
-            </IconButton>
+            <Box
+              sx={{
+                position: 'relative',
+                display: 'inline-flex',
+              }}
+            >
+              {/* Background circle */}
+              <CircularProgress
+                variant="determinate"
+                value={100}
+                size={100}
+                thickness={5}
+                sx={{
+                  color: '#2E2E3A', // Gray background ring
+                  position: 'absolute', // Stack under
+                }}
+              />
+              {/* Foreground (actual progress) */}
+              <CircularProgress
+                variant="determinate"
+                value={25}
+                size={100}
+                thickness={5}
+                sx={{
+                  color: '#1E90FF', // Active progress color
+                }}
+              />
+              {/* Centered text */}
+              <Box
+                sx={{
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  right: 0,
+                  position: 'absolute',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  component="div"
+                  color="white"
+                >
+                  {total ? Math.round((completed / total) * 100) : 0} %
+                </Typography>
+              </Box>
+            </Box>
           </Box>
+        </Paper>
+      </Grid>
 
-          <Grid container spacing={1}>
-            {weekDays.map((day) => {
-              let isActive = habit.frequency === HabitFrequency.DAILY;
+      {habits.map((habit, index) => {
+        return (<Grid size={{ xs: 12 }} key={habit.id}>
+          <Paper sx={{ p: 2 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6">{habit.name}</Typography>
+              <IconButton size="small">
+                <MoreVertIcon />
+              </IconButton>
+            </Box>
 
-              if (habit.frequency === HabitFrequency.CUSTOM && habit.customDates) {
-                isActive = habit.customDates.find(date => {
+            <Grid container spacing={1}>
+              {weekDays.map((day) => {
+                let isActive = habit.frequency === HabitFrequency.DAILY;
+
+                if (habit.frequency === HabitFrequency.CUSTOM && habit.customDates) {
+                  isActive = habit.customDates.find(date => {
+                    const d = new Date(date);
+                    return (
+                      d.getFullYear() === day.date.getFullYear() &&
+                      d.getMonth() === day.date.getMonth() &&
+                      d.getDate() === day.date.getDate()
+                    );
+                  }) !== undefined;
+                }
+
+                let isDone = habit.doneDates?.find(date => {
                   const d = new Date(date);
                   return (
                     d.getFullYear() === day.date.getFullYear() &&
@@ -272,54 +326,50 @@ export const GoalsList = () => {
                     d.getDate() === day.date.getDate()
                   );
                 }) !== undefined;
-              }
 
-              let isDone = habit.doneDates?.find(date => {
-                const d = new Date(date);
                 return (
-                  d.getFullYear() === day.date.getFullYear() &&
-                  d.getMonth() === day.date.getMonth() &&
-                  d.getDate() === day.date.getDate()
-                ) !== undefined;
-              }) !== undefined;
-
-              return (
-                <Grid key={day.id}>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      border: 1,
-                      borderStyle: isActive ? 'dashed' : 'solid',
-                      borderColor: 'black',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: isActive ? isDone ? 'white' : 'black' : 'grey.400',
-                      backgroundColor: isDone ? 'rgb(0, 0, 0)' : 'white',
-                      fillColor: isDone ? 'black' : 'white',
-                    }}
-                  >
-                    {/* {isActive ? (
-                      <Typography variant="body2">
+                  <Grid key={day.id}>
+                    <Tooltip title={`${day.date.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })}`}>
+                      <Button
+                        onClick={() => handleDayClick(isActive, day.date, habit)}
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          border: 1,
+                          minWidth: 0,
+                          padding: 0,
+                          borderStyle: 'dashed',
+                          borderColor: isActive ? 'black' : 'grey.400',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: isActive ? isDone ? 'white' : 'black' : 'grey.400',
+                          backgroundColor: isDone ? 'rgb(0, 0, 0)' : 'white',
+                          fillColor: isDone ? 'black' : 'white',
+                        }}
+                      >
+                        {isActive ? (
+                          <Typography variant="body2">
+                            {day.date.toLocaleDateString('uk-UA', { weekday: 'short' })}
+                          </Typography>
+                        ) : (
+                          <EventBusyIcon fontSize="small" />
+                        )}
+                        {/* <Typography variant="body2">
                         {day.date.toLocaleDateString('uk-UA', { weekday: 'short' })}
-                      </Typography>
-                    ) : (
-                      <CloseIcon fontSize="small" />
-                    )} */}
-                    <Typography variant="body2">
-                        {day.date.toLocaleDateString('uk-UA', { weekday: 'short' })}
-                      </Typography>
-                  </Box>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Paper>
-        {index < total - 1 && <Divider sx={{ my: 2 }} />}
-      </Grid>
-    ))}
-  </Grid>
+                      </Typography> */}
+                      </Button>
+                    </Tooltip>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Paper>
+          {index < total - 1 && <Divider sx={{ my: 2 }} />}
+        </Grid>
+        );
+      })}
+    </Grid>
   );
 }; 
