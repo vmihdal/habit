@@ -165,6 +165,7 @@ export const GoalsList = () => {
   }
 
   enum MenuCommand {
+    VIEW,
     EDIT,
     MARK_AS_COMPLETED,
     DELETE
@@ -173,6 +174,9 @@ export const GoalsList = () => {
   const handleMenuClick = (habit: Habit, cmd: MenuCommand) => {
     setAnchorEl(null);
     switch (cmd) {
+      case MenuCommand.VIEW:
+        console.log('VIEW');
+        break;
       case MenuCommand.EDIT:
         console.log('EDIT');
         break;
@@ -323,6 +327,7 @@ export const GoalsList = () => {
                   },
                 }}
               >
+                <MenuItem onClick={() => handleMenuClick(habit, MenuCommand.VIEW)}>Переглянути</MenuItem>
                 <MenuItem onClick={() => handleMenuClick(habit, MenuCommand.EDIT)}>Редагувати</MenuItem>
                 <MenuItem onClick={() => handleMenuClick(habit, MenuCommand.MARK_AS_COMPLETED)}>Позначити як виконану</MenuItem>
                 <Divider />

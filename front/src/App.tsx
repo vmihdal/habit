@@ -11,6 +11,7 @@ import { HabitProfile } from './components/dashboard/HabitProfile';
 import { HabitCreate } from './components/HabitCreate';
 import { Playground } from './components/Playground';
 import { ConfirmProvider } from './components/common/Confirmation';
+import { HabitView } from './components/habit/HabitView';
 
 const theme = createTheme({
   typography: {
@@ -116,6 +117,12 @@ const AppRoutes = () => {
             <ConfirmProvider>
               <Playground />
             </ConfirmProvider>
+          }
+        />
+        <Route
+          path="/habit-view"
+          element={
+              <HabitView/>
           }
         />
       </Routes>
