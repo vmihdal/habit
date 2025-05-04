@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Container, Button } from "@mui/material";
+import { Box, Container } from "@mui/material";
 import { useAuth } from '../../contexts/AuthContext';
 import { HabitViewHeader } from './HabitViewHeader';
 import { HabitViewGoals } from './HabitViewGoals';
 import { HabitViewCalendar } from './HabitViewCalendar';
+import { HabitDto as Habit } from '../../types/habit.types';
 
-export const HabitView: React.FC = () => {
+export const HabitView = ({ habit_id }: { habit_id: number }) => {
   const { token } = useAuth();
+  const [habit, setHabit] = useState<Habit | null>(null);
 
   useEffect(() => {
     

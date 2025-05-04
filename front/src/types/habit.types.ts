@@ -1,11 +1,23 @@
+export enum HabitFrequency {
+  DAILY = 'DAILY',
+  CUSTOM = 'CUSTOM'
+}
+
+export enum HabitStatus {
+  ACTIVE = 'ACTIVE',
+  ARCHIVED = 'ARCHIVED',
+  COMPLETED = 'COMPLETED'
+}
 export interface HabitDto {
   id: number;
   name: string;
-  frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'CUSTOM';
-  startDate: Date;
+  frequency: HabitFrequency;
+  startDate?: Date;
   endDate?: Date;
   reminder?: Date;
-  status: 'ACTIVE' | 'ARCHIVED' | 'COMPLETED';
+  status?: HabitStatus;
   targetDays?: number;
-  color?: string;
+  color?: string;  // Hex color format (#RRGGBB or #RGB)
+  customDates?: Date[];
+  doneDates?: Date[];
 } 
