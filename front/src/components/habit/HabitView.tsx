@@ -1,26 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Container } from "@mui/material";
-import { useAuth } from '../../contexts/AuthContext';
+import { Box, Container, Divider, Paper } from "@mui/material";
 import { HabitViewHeader } from './HabitViewHeader';
 import { HabitViewGoals } from './HabitViewGoals';
 import { HabitViewCalendar } from './HabitViewCalendar';
 import { HabitDto as Habit } from '../../types/habit.types';
 
-export const HabitView = ({ habit_id }: { habit_id: number }) => {
-  const { token } = useAuth();
-  const [habit, setHabit] = useState<Habit | null>(null);
+export const HabitView = ({ habit, setHabit }: { habit: Habit | null, setHabit: React.Dispatch<React.SetStateAction<Habit | null>> }) => {
 
-  useEffect(() => {
-    
-  }, []);
+  if (!habit) {
+    return;
+  }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-        <HabitViewHeader />
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 3 }}>
+    <Paper sx={{ p: 2, m: 0 }}>
+      <HabitViewHeader habit={habit} />
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 3 }}>
         <HabitViewGoals />
-        <HabitViewCalendar />
+        <Divider />
+        <HabitViewCalendar habit={habit} setHabit={setHabit} />
       </Box>
-    </Container>
+    </Paper>
   );
 }; 

@@ -2,42 +2,41 @@ import React, { useEffect, useState } from 'react';
 import { ArrowBack, Settings } from "@mui/icons-material";
 import { Box, Divider, IconButton, Typography } from "@mui/material";
 import { useAuth } from '../../contexts/AuthContext';
+import { HabitDto as Habit } from '../../types/habit.types';
 
-export const HabitViewHeader = () => {
+export const HabitViewHeader = ({ habit }: { habit: Habit | null }) => {
   const { token } = useAuth();
 
   useEffect(() => {
     
   }, []);
 
-  const stats = [
-    { value: "12", label: "Виконано" },
-    { value: "3", label: "Пропущено" },
-  ];
+  if (!habit) {
+    return null;
+  }
 
   return (
-    <Box sx={{ mt: 7 }}>
+    <Box sx={{ mt: 0 }}>
       <Box sx={{ 
         display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         mb: 1.75
       }}>
-        <IconButton size="small">
+        {/* <IconButton size="small">
           <ArrowBack sx={{ fontSize: 18 }} />
-        </IconButton>
+        </IconButton> */}
         <Typography 
-          variant="h6" 
+          variant="h6"
           sx={{ 
             fontSize: 20,
-            fontWeight: 600
+            fontWeight: 600,
           }}
         >
-          Гітара
+          {habit.name}
         </Typography>
-        <IconButton size="small">
+        {/* <IconButton size="small">
           <Settings sx={{ fontSize: 18 }} />
-        </IconButton>
+        </IconButton> */}
       </Box>
       <Divider />
       <Box sx={{ 
@@ -45,8 +44,7 @@ export const HabitViewHeader = () => {
         justifyContent: 'space-around', 
         py: 2
       }}>
-        {stats.map((stat, index) => (
-          <Box key={index} sx={{ textAlign: 'center' }}>
+        <Box key={0} sx={{ textAlign: 'center' }}>
             <Typography 
               variant="h6" 
               sx={{ 
@@ -55,16 +53,15 @@ export const HabitViewHeader = () => {
                 mb: 0.5
               }}
             >
-              {stat.value}
+              {habit.doneDates ? habit.doneDates.length : 0}
             </Typography>
             <Typography 
               variant="body2"
               sx={{ fontSize: 14 }}
             >
-              {stat.label}
+              Днів  виконано
             </Typography>
           </Box>
-        ))}
       </Box>
       <Divider />
     </Box>

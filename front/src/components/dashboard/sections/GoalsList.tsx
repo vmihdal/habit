@@ -1,9 +1,10 @@
-import { CircularProgress, Grid, Paper, Typography, IconButton, Box, Divider, Button, Tooltip, Menu, MenuItem } from '@mui/material';
+import { CircularProgress, Grid, Paper, Typography, IconButton, Box, Divider, Button, Tooltip, Menu, MenuItem, DialogContent, Dialog } from '@mui/material';
 import { MoreVert as MoreVertIcon, EventBusy as EventBusyIcon } from '@mui/icons-material';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useConfirm } from '../../common/Confirmation';
+import { HabitView } from '../../habit/HabitView';
 
 enum HabitFrequency {
   DAILY = 'DAILY',
@@ -64,6 +65,8 @@ export const GoalsList = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const confirm = useConfirm();
+  const [habit_view_open, setHabitViewOpen] = useState(false);
+  const [currentHabit, setCurrentHabit] = useState<Habit | null>(null);
 
   const fetchGoals = async (): Promise<Habit[]> => {
     try {
@@ -175,7 +178,8 @@ export const GoalsList = () => {
     setAnchorEl(null);
     switch (cmd) {
       case MenuCommand.VIEW:
-        console.log('VIEW');
+        setCurrentHabit(habit);
+        setHabitViewOpen(true);
         break;
       case MenuCommand.EDIT:
         console.log('EDIT');
@@ -334,6 +338,15 @@ export const GoalsList = () => {
                 <MenuItem onClick={() => handleMenuClick(habit, MenuCommand.DELETE)}><Typography color="error">Видалити</Typography></MenuItem>
               </Menu>
             </Box>
+
+            <Dialog open={habit_view_open} onClose={() => {
+              setCurrentHabit(null);
+              setHabitViewOpen(false)
+            }}fullWidth>
+              <DialogContent sx={{ p: 0, m: 0 }}>
+                <HabitView habit={currentHabit} setHabit={setCurrentHabit} />
+              </DialogContent>
+            </Dialog>
 
             <Grid container spacing={1}>
               {weekDays.map((day) => {
