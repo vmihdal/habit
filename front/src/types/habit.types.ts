@@ -1,9 +1,11 @@
 
-export interface GoalDto {
-  id: number;
+export interface CreateGoalDto {
   name: string;
-  description?: string;
   completed: boolean;
+}
+
+export interface GoalDto extends CreateGoalDto {
+  id: number;
 }
 
 export enum HabitFrequency {
