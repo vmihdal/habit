@@ -10,6 +10,8 @@ import { Dayjs } from 'dayjs';
 import 'dayjs/locale/uk';
 import { HabitDto as Habit, HabitFrequency } from '../../types/habit.types';
 import axios from 'axios';
+import CheckIcon from '@mui/icons-material/Check';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 
 const API_URL = 'http://localhost:3001';
 
@@ -17,7 +19,7 @@ function CustomDayButton(props: any, habit: Habit, setHabit: React.Dispatch<Reac
   const { token } = useAuth();
   const { day, selectedDate, ...other } = props;
   const dayDate = new Date(day);
-  
+
   let isActive = habit.frequency === HabitFrequency.DAILY;
   if (habit.frequency === HabitFrequency.CUSTOM && habit.customDates) {
     isActive = habit.customDates.find(date => {
@@ -65,7 +67,7 @@ function CustomDayButton(props: any, habit: Habit, setHabit: React.Dispatch<Reac
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-    }).then( _ => {
+    }).then(_ => {
       setHabit((prev) => {
         if (!prev) {
           return null;
@@ -104,11 +106,12 @@ function CustomDayButton(props: any, habit: Habit, setHabit: React.Dispatch<Reac
         }
       }}
     >
+      {isActive && isDone ? <CheckIcon fontSize="small" /> : isActive ? null : <EventBusyIcon fontSize="small" />}
     </PickersDay>
   );
 }
 
-export const HabitViewCalendar = ({ habit, setHabit }: { habit: Habit | null, setHabit: React.Dispatch<React.SetStateAction<Habit | null>>}) => {
+export const HabitViewCalendar = ({ habit, setHabit }: { habit: Habit | null, setHabit: React.Dispatch<React.SetStateAction<Habit | null>> }) => {
   const { token } = useAuth();
   const [value, setValue] = useState<Dayjs | null>(null);
 

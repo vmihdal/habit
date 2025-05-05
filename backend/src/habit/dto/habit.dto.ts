@@ -1,7 +1,7 @@
 import { IsString, IsEnum, IsOptional, IsInt, IsDate, IsHexColor, IsArray } from 'class-validator';
 import { HabitFrequency, HabitStatus } from '../enums/habit.enum';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { $Enums } from '@prisma/client';
+import { $Enums, HabitGoal } from '@prisma/client';
 import { Type } from 'class-transformer';
 
 export class CreateHabitDto {

@@ -10,8 +10,22 @@ export class HabitService {
   async create(userId: number, createHabitDto: CreateHabitDto): Promise<HabitDto> {
     const habit = await this.prisma.habit.create({
       data: {
-        ...createHabitDto,
         userId,
+        name: createHabitDto.name,
+        frequency: createHabitDto.frequency,
+        startDate: createHabitDto.startDate,
+        endDate: createHabitDto.endDate,
+        reminder: createHabitDto.reminder,
+        status: createHabitDto.status,
+        targetDays: createHabitDto.targetDays,
+        color: createHabitDto.color,
+        customDates: createHabitDto.customDates,
+        goals: {
+          create: createHabitDto.goals.map(goal => ({
+            name: goal.name,
+            done: goal.done,
+          })),
+        },
       },
     });
 
@@ -27,6 +41,7 @@ export class HabitService {
       color: habit.color,
       customDates: habit.customDates,
       doneDates: [],
+      goals: habit.goals,
     };
   }
 
@@ -50,6 +65,7 @@ export class HabitService {
       color: habit.color,
       customDates: habit.customDates,
       doneDates: habit.doneDates,
+      goals: habit.goals,
     }));
   }
 
@@ -76,7 +92,8 @@ export class HabitService {
       targetDays: habit.targetDays,
       color: habit.color,
       customDates: habit.customDates,
-      doneDates: habit.doneDates,
+      doneDates: habit.doneDates, 
+      goals: habit.goals,
     };
   }
 
@@ -109,6 +126,7 @@ export class HabitService {
       color: updatedHabit.color,
       customDates: updatedHabit.customDates,  
       doneDates: updatedHabit.doneDates,
+      goals: updatedHabit.goals,
     };
   }
 
@@ -152,6 +170,7 @@ export class HabitService {
       status: habit.status,
       frequency: habit.frequency,
       customDates: habit.customDates, 
+      goals: habit.goals,
     };
   }
 } 
