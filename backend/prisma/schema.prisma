@@ -33,8 +33,18 @@ model Habit {
   color       String?     
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
+  goals       Goal[]        // Relation to goals
 
   @@map("habits")
+}
+
+model Goal {
+  id          Int      @id @default(autoincrement())
+  name        String
+  completed   Boolean  @default(false)
+  habit       Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  habitId     Int
+  @@map("goals")
 }
 
 enum HabitFrequency {

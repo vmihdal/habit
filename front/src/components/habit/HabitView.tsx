@@ -15,7 +15,7 @@ export const HabitView = ({ habit, setHabit }: { habit: Habit | null, setHabit: 
     <Paper sx={{ p: 2, m: 0 }}>
       <HabitViewHeader habit={habit} />
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 3 }}>
-        <HabitViewGoals />
+        <HabitViewGoals habit={habit} setHabit={setHabit} />
         <Divider />
         <HabitViewCalendar habit={habit} setHabit={setHabit} />
       </Box>

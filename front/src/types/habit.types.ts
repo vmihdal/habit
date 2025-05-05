@@ -1,3 +1,11 @@
+
+export interface GoalDto {
+  id: number;
+  name: string;
+  description?: string;
+  completed: boolean;
+}
+
 export enum HabitFrequency {
   DAILY = 'DAILY',
   CUSTOM = 'CUSTOM'
@@ -20,4 +28,5 @@ export interface HabitDto {
   color?: string;  // Hex color format (#RRGGBB or #RGB)
   customDates?: Date[];
   doneDates?: Date[];
+  goals?: GoalDto[];
 } 

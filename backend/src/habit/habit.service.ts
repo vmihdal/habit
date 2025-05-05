@@ -20,12 +20,16 @@ export class HabitService {
         targetDays: createHabitDto.targetDays,
         color: createHabitDto.color,
         customDates: createHabitDto.customDates,
-        goals: {
+        doneDates: createHabitDto.doneDates,
+        goals: createHabitDto.goals ? {
           create: createHabitDto.goals.map(goal => ({
             name: goal.name,
-            done: goal.done,
-          })),
-        },
+            completed: goal.completed ?? false,
+          }))
+        } : undefined,
+      },
+      include: {
+        goals: true,
       },
     });
 
@@ -40,7 +44,7 @@ export class HabitService {
       targetDays: habit.targetDays,
       color: habit.color,
       customDates: habit.customDates,
-      doneDates: [],
+      doneDates: habit.doneDates,
       goals: habit.goals,
     };
   }
@@ -48,6 +52,9 @@ export class HabitService {
   async findAll(userId: number): Promise<HabitDto[]> {
     const habits = await this.prisma.habit.findMany({
       where: { userId },
+      include: {
+        goals: true,
+      },
       orderBy: {
         startDate: 'desc',
       },
@@ -75,6 +82,9 @@ export class HabitService {
         id,
         userId,
       },
+      include: {
+        goals: true,
+      },
     });
 
     if (!habit) {
@@ -92,7 +102,7 @@ export class HabitService {
       targetDays: habit.targetDays,
       color: habit.color,
       customDates: habit.customDates,
-      doneDates: habit.doneDates, 
+      doneDates: habit.doneDates,
       goals: habit.goals,
     };
   }
@@ -111,7 +121,19 @@ export class HabitService {
 
     const updatedHabit = await this.prisma.habit.update({
       where: { id },
-      data: updateHabitDto,
+      data: {
+        ...updateHabitDto,
+        goals: updateHabitDto.goals ? {
+          deleteMany: {},
+          create: updateHabitDto.goals.map(goal => ({
+            name: goal.name,
+            completed: goal.completed ?? false,
+          }))
+        } : undefined,
+      },
+      include: {
+        goals: true,
+      },
     });
 
     return {
@@ -124,7 +146,7 @@ export class HabitService {
       status: updatedHabit.status,
       targetDays: updatedHabit.targetDays,
       color: updatedHabit.color,
-      customDates: updatedHabit.customDates,  
+      customDates: updatedHabit.customDates,
       doneDates: updatedHabit.doneDates,
       goals: updatedHabit.goals,
     };
@@ -153,6 +175,9 @@ export class HabitService {
         id: habitId,
         userId,
       },
+      include: {
+        goals: true,
+      },
     });
 
     if (!habit) {
@@ -169,7 +194,7 @@ export class HabitService {
       targetDays: habit.targetDays,
       status: habit.status,
       frequency: habit.frequency,
-      customDates: habit.customDates, 
+      customDates: habit.customDates,
       goals: habit.goals,
     };
   }

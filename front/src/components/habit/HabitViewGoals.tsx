@@ -8,27 +8,23 @@ import {
   Paper
 } from "@mui/material";
 import { useAuth } from '../../contexts/AuthContext';
+import { HabitDto as Habit } from '../../types/habit.types';
 
 
-export const HabitViewGoals = () => {
+export const HabitViewGoals = ({ habit, setHabit }: { habit: Habit | null, setHabit: React.Dispatch<React.SetStateAction<Habit | null>> }) => {
   const { token } = useAuth();
 
   useEffect(() => {
 
   }, []);
 
-  const goals = [
-    {
-      id: 1,
-      text: "Зіграти першу мелодію",
-      completed: false,
-    },
-    {
-      id: 2,
-      text: "Вивчити 10 акордів",
-      completed: true,
-    },
-  ];
+  if (!habit) {
+    return null;
+  }
+
+  if (!habit.goals) {
+    return null;
+  }
 
   return (
     <Box>
@@ -42,7 +38,7 @@ export const HabitViewGoals = () => {
         Цілі
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {goals.map((goal) => (
+        {habit.goals.map((goal) => (
           <Paper
             key={goal.id}
             elevation={0}
@@ -69,7 +65,7 @@ export const HabitViewGoals = () => {
                 textDecoration: goal.completed ? "line-through" : "none",
               }}
             >
-              {goal.text}
+              {goal.name}
             </Typography>
             <IconButton size="small">
               <Close sx={{ fontSize: 12 }} />

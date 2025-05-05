@@ -2,7 +2,8 @@ import { PartialType } from '@nestjs/mapped-types';
 import { HabitDto as CreateHabitDto } from './habit.dto';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { HabitFrequency, HabitStatus } from '../enums/habit.enum';
-import { HabitGoal } from '@prisma/client';
+import { GoalDto } from './goal.dto';
+
 export class UpdateHabitDto extends PartialType(CreateHabitDto) {
   @ApiPropertyOptional({ 
     description: 'The name of the habit',
@@ -69,6 +70,13 @@ export class UpdateHabitDto extends PartialType(CreateHabitDto) {
     type: 'array',
     items: { type: 'string', format: 'date-time' }
   })
-  doneDates?: Date[];  
-  
+  doneDates?: Date[];
+
+  @ApiPropertyOptional({
+    description: 'The goals of the habit',
+    example: [{ name: 'Goal 1', done: false }, { name: 'Goal 2', done: true }],
+    type: 'array',
+    items: { type: 'object', properties: { name: { type: 'string' }, done: { type: 'boolean' } } }
+  })
+  goals?: GoalDto[];
 } 

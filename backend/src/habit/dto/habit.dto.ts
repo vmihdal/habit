@@ -1,8 +1,9 @@
 import { IsString, IsEnum, IsOptional, IsInt, IsDate, IsHexColor, IsArray } from 'class-validator';
 import { HabitFrequency, HabitStatus } from '../enums/habit.enum';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { $Enums, HabitGoal } from '@prisma/client';
+import { $Enums } from '@prisma/client';
 import { Type } from 'class-transformer';
+import { CreateGoalDto, GoalDto } from './goal.dto';
 
 export class CreateHabitDto {
   @ApiProperty({ 
@@ -105,7 +106,14 @@ export class CreateHabitDto {
   @IsArray()
   @IsOptional()
   doneDates?: Date[];
-  
+
+  @ApiPropertyOptional({
+    description: 'The goals associated with this habit',
+    type: [CreateGoalDto],
+  })
+  @IsArray()
+  @IsOptional()
+  goals?: CreateGoalDto[];
 }
 
 export class HabitDto extends CreateHabitDto {
@@ -114,4 +122,10 @@ export class HabitDto extends CreateHabitDto {
     example: 1
   })
   id: number;
+
+  @ApiProperty({
+    description: 'The goals associated with this habit',
+    type: [GoalDto],
+  })
+  goals: GoalDto[];
 } 
