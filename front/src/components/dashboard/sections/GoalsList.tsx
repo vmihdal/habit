@@ -62,8 +62,7 @@ export const GoalsList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [habits, setHabits] = useState<Habit[]>([]);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<{ [key: number]: HTMLElement | null }>({});
   const confirm = useConfirm();
   const [habit_view_open, setHabitViewOpen] = useState(false);
   const [currentHabit, setCurrentHabit] = useState<Habit | null>(null);
@@ -174,8 +173,22 @@ export const GoalsList = () => {
     DELETE
   }
 
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, habitId: number) => {
+    setMenuAnchorEl(prev => ({
+      ...prev,
+      [habitId]: event.currentTarget
+    }));
+  };
+
+  const handleMenuClose = (habitId: number) => {
+    setMenuAnchorEl(prev => ({
+      ...prev,
+      [habitId]: null
+    }));
+  };
+
   const handleMenuClick = (habit: Habit, cmd: MenuCommand) => {
-    setAnchorEl(null);
+    handleMenuClose(habit.id);
     switch (cmd) {
       case MenuCommand.VIEW:
         setCurrentHabit(habit);
@@ -305,14 +318,14 @@ export const GoalsList = () => {
           <Paper sx={{ p: 2 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
               <Typography variant="h6">{habit.name}</Typography>
-              <IconButton size="small" onClick={(event) => setAnchorEl(event.currentTarget)}>
+              <IconButton size="small" onClick={(event) => handleMenuOpen(event, habit.id)}>
                 <MoreVertIcon />
               </IconButton>
               <Menu
-                id="basic-menu"
-                anchorEl={anchorEl}
-                open={open}
-                onClose={() => setAnchorEl(null)}
+                id={`habit-menu-${habit.id}`}
+                anchorEl={menuAnchorEl[habit.id]}
+                open={Boolean(menuAnchorEl[habit.id])}
+                onClose={() => handleMenuClose(habit.id)}
                 anchorOrigin={{
                   vertical: 'top',
                   horizontal: 'left',
