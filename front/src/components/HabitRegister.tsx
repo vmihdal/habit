@@ -38,7 +38,7 @@ export const HabitRegister: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
-  const { register: registerUser, error, clearError } = useAuth();
+  const { register: registerUser, error, clearError, token } = useAuth();
   const {
     register,
     handleSubmit,
@@ -46,6 +46,10 @@ export const HabitRegister: React.FC = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
+
+  if (token) {
+    navigate("/dashboard");
+  }
 
   const [registerStatus, setRegisterStatus] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number>(3);

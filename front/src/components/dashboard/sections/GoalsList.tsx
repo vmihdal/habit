@@ -48,7 +48,7 @@ const API_URL = 'http://localhost:3001';
 
 export const GoalsList = () => {
   const { token } = useAuth();
-  const { habits, setHabits, currentHabit, setCurrentHabit } = useHabit();
+  const { habits, setHabits, setCurrentHabit, removeHabit } = useHabit();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [habit_view_open, setHabitViewOpen] = useState(false);
@@ -185,16 +185,7 @@ export const GoalsList = () => {
           description: 'Ви впевнені, що хочете видалити цю звичку?',
         }).then((confirmed) => {
           if (confirmed) {
-            axios.delete(`${API_URL}/habits/${habit.id}`, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }).then(() => {
-              setHabits((prevItems: HabitDto[]) =>
-                prevItems.filter((item: HabitDto) => item.id !== habit.id)
-              );
-            });
+            removeHabit(habit.id);
           }
         });
         break;

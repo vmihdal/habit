@@ -77,11 +77,6 @@ export const HabitCreate = () => {
         targetDays: duration === "month" ? 30 : 7,
         color: "#FF5733", // Default color
       };
-      // const token = localStorage.getItem("token");
-      // if (!token) {
-      //   setError("Будь ласка, увійдіть в систему");
-      //   return;
-      // }
 
       await axios.post(`${API_URL}/habits`, habitData, {
         headers: {
@@ -96,13 +91,6 @@ export const HabitCreate = () => {
         if (err.response) {
           setError(err.response.data.message || "Помилка при створенні звички");
         }
-        // } else if (err.request) {
-        //   setError(
-        //     "Не вдалося підключитися до сервера. Перевірте, чи запущений бекенд"
-        //   );
-        // } else {
-        //   setError("Сталася помилка при відправці запиту");
-        // }
       } else {
         setError("Невідома помилка");
       }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button, TextField, Divider, Box, Typography, Container, useTheme, useMediaQuery } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -31,11 +31,17 @@ const schema = yup.object().shape({
 });
 
 export const HabitLogin: React.FC = () => {
-
+  const { login, token, error, clearError } = useAuth();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const navigate = useNavigate();
-  const { login, token, error, clearError } = useAuth();
+
+  useEffect(() => {
+    if (token) {
+      navigate("/dashboard");
+    }
+  })
+
   const {
     register,
     handleSubmit,

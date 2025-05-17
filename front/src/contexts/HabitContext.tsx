@@ -9,6 +9,7 @@ interface HabitContextType {
   currentHabit: HabitDto | null;
   setCurrentHabit: (habit: HabitDto | null) => void;
   updateHabit: (habitId: number, updates: Partial<HabitDto>) => Promise<void | HabitDto>;
+  removeHabit: (habitId: number) => Promise<void>;
 }
 
 const HabitContext = createContext<HabitContextType | undefined>(undefined);
@@ -57,13 +58,46 @@ export const HabitProvider = ({ children }: { children: ReactNode }) => {
     return promise;
   }, [token]);
 
+  const removeHabit = useCallback((habitId: number) => {
+    if (!token) {
+      let message = "Cannot update habit: No authentication token available";
+      console.error(message);
+      return Promise.reject(message);
+    }
+
+    let promise = axios.delete(`${API_URL}/habits/${habitId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }).then(_ => {
+      // Update the current habit if it's the one being modified
+
+      if(currentHabit && currentHabit.id == habitId) {
+        setCurrentHabit(null);
+      }
+
+      setHabits(prevHabits =>
+        prevHabits.filter(habit =>
+          habit.id !== habitId
+        )
+      );
+    }).catch(message => {
+      console.error("Failed to update habit: ", message);
+      message
+    });
+
+    return promise;
+  }, [token]);
+
   return (
     <HabitContext.Provider value={{
       habits,
       setHabits,
       currentHabit,
       setCurrentHabit,
-      updateHabit
+      updateHabit,
+      removeHabit
     }}>
       {children}
     </HabitContext.Provider>

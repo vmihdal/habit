@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AuthContextType, AuthState, LoginCredentials, RegisterCredentials, User } from '../types/auth.types';
 import { authService } from '../services/auth.service';
-import { AUTH_TOKEN_KEY } from '../config/constants';
+import axios from 'axios';
 
 const initialState: AuthState = {
   user: null,
@@ -21,9 +21,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token) {
         try {
           authService.setToken(token);
-          // You might want to add an endpoint to validate the token and get user data
-          setState(prev => ({ ...prev, token, loading: false }));
+          // Fetch user data using the token
+          const response = await axios.get('http://localhost:3001/users/me', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setState(prev => ({ 
+            ...prev, 
+            token, 
+            user: response.data,
+            loading: false 
+          }));
         } catch (error) {
+          console.error('Failed to initialize auth:', error);
           authService.removeToken();
           setState(prev => ({ ...prev, loading: false }));
         }
@@ -42,10 +53,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       authService.setToken(access_token);
       setState(prev => ({ ...prev, user, token: access_token, loading: false }));
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Login error:', error);
       setState(prev => ({
         ...prev,
-        error: "Помилка при вході",
+        error: error.response?.data?.message || "Помилка при вході",
         loading: false,
       }));
       return false;
@@ -55,10 +67,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (credentials: RegisterCredentials) => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
-      await authService.register(credentials);
-      setState(prev => ({ ...prev, loading: false }));
+      const { access_token, user } = await authService.register(credentials);
+      authService.setToken(access_token);
+      setState(prev => ({ ...prev, user, token: access_token, loading: false }));
       return true;
     } catch (error: any) {
+      console.error('Register error:', error);
       let errorMessage = "Помилка при реєстрації";
       
       if (error.response?.status === 409) {

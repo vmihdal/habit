@@ -2,16 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, Button } from "@mui/material";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export const HabitHome: React.FC = () => {
   const navigate = useNavigate();
+  const token = useAuth();
 
   useEffect(() => {
 
   }, []);
 
   const handleClick = () => {
-    navigate('/login');
+
+    if(token) {
+      navigate("/dashboard")
+    } else {
+      navigate('/login');
+    }
   };
 
   return (
