@@ -33,21 +33,22 @@ export const HabitProvider = ({ children }: { children: ReactNode }) => {
         "Content-Type": "application/json",
       },
     }).then(response => {
+      const updatedHabit = response.data as HabitDto;
 
       // Update the current habit if it's the one being modified
       setCurrentHabit(prev => {
         if (!prev || prev.id !== habitId) return prev;
-        return { ...prev, ...updates };
+        return updatedHabit;
       });
 
       // Update the habit in the habits list
       setHabits(prevHabits =>
         prevHabits.map(habit =>
-          habit.id === habitId ? { ...habit, ...updates } : habit
+          habit.id === habitId ? updatedHabit : habit
         )
       );
 
-      return response.data as HabitDto;
+      return updatedHabit;
     }).catch(message => {
       console.error("Failed to update habit: ", message);
       message

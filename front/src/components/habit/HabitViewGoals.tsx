@@ -67,20 +67,20 @@ export const HabitViewGoals = memo(() => {
     updateHabit(currentHabit.id, { goals: updatedGoals });
   }
 
-  const handleGoalChange = ( event: React.ChangeEvent<HTMLInputElement>, goal: GoalDto) => {
+  const handleGoalChange = (event: React.ChangeEvent<HTMLInputElement>, goal: GoalDto) => {
     if (!currentHabit || !currentHabit.goals) return;
 
-    let target = currentHabit.goals.find((e) => e.id == goal.id);
-    if (target ) {
-      target.completed = event.target.checked;
-    }
+    const updatedGoals = currentHabit.goals.map(g => 
+      g.id === goal.id ? { ...g, completed: event.target.checked } : g
+    );
 
-    updateHabit(currentHabit.id, { goals: currentHabit.goals })
+    updateHabit(currentHabit.id, { goals: updatedGoals });
   };
 
   const onSubmit = async (data: FormData) => {
     let new_goal = {
-      name: data.name
+      name: data.name,
+      completed: false
     } as GoalDto;
     let goals: GoalDto[] = currentHabit.goals ? [ ... currentHabit.goals, new_goal ] : [new_goal];
     updateHabit(currentHabit.id, { goals: goals })
@@ -131,9 +131,9 @@ export const HabitViewGoals = memo(() => {
           >
             <Checkbox
               checked={goal.completed}
+              onChange={(e) => handleGoalChange(e, goal)}
               icon={<RadioButtonUncheckedIcon />}
               checkedIcon={<CheckCircleIcon sx={{ color: 'black' }} />}
-              onClick={(e) => handleGoalChange(e, goal)}
               sx={{
                 p: 0,
                 mr: 1.5,
