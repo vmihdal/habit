@@ -64,66 +64,36 @@ export const HabitViewGoals = memo(() => {
   });
 
   const handleGoalRemove = (goal: GoalDto) => {
-    if (!currentHabit.goals) {
-      return;
-    }
-
-    let goals = [...currentHabit.goals.filter((g: GoalDto) => g.id !== goal.id)];
-
-    let request_data: CreateGoalDto[] = goals.map((goal: GoalDto) => ({ 
-      name: goal.name, 
-      completed: goal.completed 
-    }));
-
-    axios.patch(`${API_URL}/habits/${currentHabit.id}`, { goals: request_data }, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }).then(response => {
-      const data = response.data as HabitDto;
-      updateHabit(currentHabit.id, { goals: data.goals });
-    }).catch(message => {
-      console.error(message);
-    });
+    if (!currentHabit || !currentHabit.goals) return;
+    let updatedGoals = currentHabit.goals.filter((g: GoalDto) => g.id !== goal.id);
+    updateHabit(currentHabit.id, { goals: updatedGoals });
   }
 
   const handleGoalChange = ( event: React.ChangeEvent<HTMLInputElement>, goal: GoalDto) => {
 
     if (!currentHabit || !currentHabit.goals) return;
-
     goal.completed = event.target.checked;
-    
     const updatedGoals = currentHabit.goals.map((g: GoalDto) => 
       g.id === goal.id ? goal : g
     );
-    
-    updateHabit(currentHabit.id, { goals: updatedGoals });
+    updateHabit(currentHabit.id, { goals: updatedGoals })
   };
 
   const onSubmit = async (data: FormData) => {
-    let goals = [...currentHabit.goals ? currentHabit.goals.map((goal: GoalDto) => ({ 
-      name: goal.name, 
-      completed: goal.completed 
-    })) : [], {
-      name: data.name,
-    } as CreateGoalDto];
-
-    axios.patch(`${API_URL}/habits/${currentHabit.id}`, { goals }, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }).then(response => {
-      const data = response.data as HabitDto;
-      updateHabit(currentHabit.id, { goals: data.goals });
-      reset();
-    }).catch(message => {
+    let new_goal = {
+      name: data.name
+    } as GoalDto;
+    let goals: GoalDto[] = currentHabit.goals ? [ ... currentHabit.goals, new_goal ] : [new_goal];
+    updateHabit(currentHabit.id, { goals: goals })
+    .then( _ => {
+      reset()
+    })
+    .catch(message => {
       setError('name', {
         type: 'manual',
         message
       });
-    });
+    })
   };
 
   return (

@@ -8,7 +8,7 @@ interface HabitContextType {
   setHabits: Dispatch<SetStateAction<HabitDto[]>>;
   currentHabit: HabitDto | null;
   setCurrentHabit: (habit: HabitDto | null) => void;
-  updateHabit: (habitId: number, updates: Partial<HabitDto>) => void;
+  updateHabit: (habitId: number, updates: Partial<HabitDto>) => Promise<void>;
 }
 
 const HabitContext = createContext<HabitContextType | undefined>(undefined);
@@ -22,42 +22,47 @@ export const HabitProvider = ({ children }: { children: ReactNode }) => {
 
   const updateHabit = useCallback((habitId: number, updates: Partial<HabitDto>) => {
     if (!token) {
-      console.error("Cannot update habit: No authentication token available");
-      return;
+      let message = "Cannot update habit: No authentication token available";
+      console.error(message);
+      return Promise.reject(message);
     }
 
-    // Update the current habit if it's the one being modified
-    setCurrentHabit(prev => {
-      if (!prev || prev.id !== habitId) return prev;
-      return { ...prev, ...updates };
-    });
-
-    // Update the habit in the habits list
-    setHabits(prevHabits => 
-      prevHabits.map(habit => 
-        habit.id === habitId ? { ...habit, ...updates } : habit
-      )
-    );
-
-    axios.patch(`${API_URL}/habits/${habitId}`, { ...updates }, {
+    let promise = axios.patch(`${API_URL}/habits/${habitId}`, { ...updates }, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-    }).then(_ => {
+    }).then(response => {
+
+      // Update the current habit if it's the one being modified
+      setCurrentHabit(prev => {
+        if (!prev || prev.id !== habitId) return prev;
+        return { ...prev, ...updates };
+      });
+
+      // Update the habit in the habits list
+      setHabits(prevHabits =>
+        prevHabits.map(habit =>
+          habit.id === habitId ? { ...habit, ...updates } : habit
+        )
+      );
+
+      response.data as HabitDto
     }).catch(message => {
       console.error("Failed to update habit: ", message);
+      message
     });
 
+    return promise;
   }, [token]);
 
   return (
-    <HabitContext.Provider value={{ 
-      habits, 
-      setHabits, 
-      currentHabit, 
-      setCurrentHabit, 
-      updateHabit 
+    <HabitContext.Provider value={{
+      habits,
+      setHabits,
+      currentHabit,
+      setCurrentHabit,
+      updateHabit
     }}>
       {children}
     </HabitContext.Provider>
