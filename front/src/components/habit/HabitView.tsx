@@ -1,24 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 import { Box, Container, Divider, Paper } from "@mui/material";
 import { HabitViewHeader } from './HabitViewHeader';
 import { HabitViewGoals } from './HabitViewGoals';
 import { HabitViewCalendar } from './HabitViewCalendar';
 import { HabitDto as Habit } from '../../types/habit.types';
+import { useHabit } from '../../contexts/HabitContext';
 
-export const HabitView = ({ habit, setHabit }: { habit: Habit | null, setHabit: React.Dispatch<React.SetStateAction<Habit | null>> }) => {
+export const HabitView = memo(() => {
+  const { currentHabit } = useHabit();
 
-  if (!habit) {
-    return;
-  }
+  if (!currentHabit) return null;
 
   return (
     <Paper sx={{ p: 2, m: 0 }}>
-      <HabitViewHeader habit={habit} />
+      <HabitViewHeader habit={currentHabit} />
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 3 }}>
-        <HabitViewGoals habit={habit} setHabit={setHabit} />
+        <HabitViewGoals />
         <Divider />
-        <HabitViewCalendar habit={habit} setHabit={setHabit} />
+        <HabitViewCalendar />
       </Box>
     </Paper>
   );
-}; 
+});
+
+HabitView.displayName = 'HabitView'; 

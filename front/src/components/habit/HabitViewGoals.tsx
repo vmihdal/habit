@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 import {
   Box,
   Checkbox,
@@ -9,7 +9,7 @@ import {
   TextField
 } from "@mui/material";
 import { useAuth } from '../../contexts/AuthContext';
-import { CreateGoalDto, GoalDto, HabitDto as Habit } from '../../types/habit.types';
+import { CreateGoalDto, GoalDto, HabitDto } from '../../types/habit.types';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -17,6 +17,7 @@ import * as yup from 'yup';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import axios from 'axios';
+import { useHabit } from '../../contexts/HabitContext';
 
 interface FormData {
   name: string;
@@ -36,18 +37,19 @@ const schema = yup.object().shape({
 
 const API_URL = 'http://localhost:3001';
 
-export const HabitViewGoals = ({ habit, setHabit }: { habit: Habit | null, setHabit: React.Dispatch<React.SetStateAction<Habit | null>> }) => {
+export const HabitViewGoals = memo(() => {
+  const { currentHabit, updateHabit } = useHabit();
   const { token } = useAuth();
 
   useEffect(() => {
 
   }, []);
 
-  if (!habit) {
+  if (!currentHabit) {
     return null;
   }
 
-  if (!habit.goals) {
+  if (!currentHabit.goals) {
     return null;
   }
 
@@ -62,89 +64,59 @@ export const HabitViewGoals = ({ habit, setHabit }: { habit: Habit | null, setHa
   });
 
   const handleGoalRemove = (goal: GoalDto) => {
-    if (!habit.goals) {
+    if (!currentHabit.goals) {
       return;
     }
 
-    let goals = [...habit.goals.filter(g => g.id !== goal.id)];
+    let goals = [...currentHabit.goals.filter((g: GoalDto) => g.id !== goal.id)];
 
-    let request_data: CreateGoalDto[] = goals.map(goal => ({ name: goal.name, completed: goal.completed }))
+    let request_data: CreateGoalDto[] = goals.map((goal: GoalDto) => ({ 
+      name: goal.name, 
+      completed: goal.completed 
+    }));
 
-    axios.patch(`${API_URL}/habits/${habit.id}`, { goals: request_data }, {
+    axios.patch(`${API_URL}/habits/${currentHabit.id}`, { goals: request_data }, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     }).then(response => {
-      const data = response.data as Habit;
-      setHabit((prev) => {
-        if (!prev) {
-          return null;
-        }
-        return { ...prev, goals: data.goals };
-      });
+      const data = response.data as HabitDto;
+      updateHabit(currentHabit.id, { goals: data.goals });
     }).catch(message => {
       console.error(message);
     });
   }
 
-  const handleGoalChange = (goal: GoalDto) => {
+  const handleGoalChange = ( event: React.ChangeEvent<HTMLInputElement>, goal: GoalDto) => {
 
-    if (!habit.goals) {
-      return;
-    }
+    if (!currentHabit || !currentHabit.goals) return;
 
-    let i = habit.goals.findIndex(g => g.id === goal.id);
-
-    if (i === -1) {
-      return;
-    }
-
-    let goals = [...habit.goals];
-
-    goals[i] = {
-      ...goals[i],
-      completed: !goals[i].completed
-    };
-
-    let request_data: CreateGoalDto[] = goals.map(goal => ({ name: goal.name, completed: goal.completed }))
-
-    axios.patch(`${API_URL}/habits/${habit.id}`, { goals: request_data }, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }).then(response => {
-      const data = response.data as Habit;
-      setHabit((prev) => {
-        if (!prev) {
-          return null;
-        }
-        return { ...prev, goals: data.goals };
-      });
-    }).catch(message => {
-      console.error(message);
-    });
-  }
+    goal.completed = event.target.checked;
+    
+    const updatedGoals = currentHabit.goals.map((g: GoalDto) => 
+      g.id === goal.id ? goal : g
+    );
+    
+    updateHabit(currentHabit.id, { goals: updatedGoals });
+  };
 
   const onSubmit = async (data: FormData) => {
-    let goals = [...habit.goals ? habit.goals.map(goal => ({ name: goal.name, completed: goal.completed })) : [], {
+    let goals = [...currentHabit.goals ? currentHabit.goals.map((goal: GoalDto) => ({ 
+      name: goal.name, 
+      completed: goal.completed 
+    })) : [], {
       name: data.name,
     } as CreateGoalDto];
 
-    axios.patch(`${API_URL}/habits/${habit.id}`, { goals }, {
+    axios.patch(`${API_URL}/habits/${currentHabit.id}`, { goals }, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     }).then(response => {
-      const data = response.data as Habit;
-      setHabit((prev) => {
-        if (!prev) {
-          return null;
-        }
-        return { ...prev, goals: data.goals };
-      });
+      const data = response.data as HabitDto;
+      updateHabit(currentHabit.id, { goals: data.goals });
       reset();
     }).catch(message => {
       setError('name', {
@@ -166,9 +138,9 @@ export const HabitViewGoals = ({ habit, setHabit }: { habit: Habit | null, setHa
         Цілі
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {habit.goals.map((goal) => (
+        {currentHabit.goals.map((goal: GoalDto) => (
           <Paper
-            key={"goal" + "-" + habit.id + "-" + goal.id}
+            key={"goal" + "-" + currentHabit.id + "-" + goal.id}
             elevation={0}
             sx={{
               display: 'flex',
@@ -180,7 +152,7 @@ export const HabitViewGoals = ({ habit, setHabit }: { habit: Habit | null, setHa
               checked={goal.completed}
               icon={<RadioButtonUncheckedIcon />}
               checkedIcon={<CheckCircleIcon sx={{ color: 'black' }} />}
-              onClick={() => handleGoalChange(goal)}
+              onClick={(e) => handleGoalChange(e, goal)}
               sx={{
                 p: 0,
                 mr: 1.5,
@@ -222,4 +194,6 @@ export const HabitViewGoals = ({ habit, setHabit }: { habit: Habit | null, setHa
       </Box>
     </Box>
   );
-}; 
+});
+
+HabitViewGoals.displayName = 'HabitViewGoals'; 

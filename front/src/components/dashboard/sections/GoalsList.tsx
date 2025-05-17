@@ -5,17 +5,8 @@ import axios from 'axios';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useConfirm } from '../../common/Confirmation';
 import { HabitView } from '../../habit/HabitView';
-
-enum HabitFrequency {
-  DAILY = 'DAILY',
-  CUSTOM = 'CUSTOM'
-}
-
-enum HabitStatus {
-  ACTIVE = 'ACTIVE',
-  ARCHIVED = 'ARCHIVED',
-  COMPLETED = 'COMPLETED'
-}
+import { useHabit } from '../../../contexts/HabitContext';
+import { HabitDto, HabitFrequency, HabitStatus } from '../../../types/habit.types';
 
 // Base habit interface for creating new habits
 interface Habit {
@@ -55,48 +46,34 @@ const weekDays = Array.from({ length: 7 }).map((_, i) => {
 
 const API_URL = 'http://localhost:3001';
 
-
-
 export const GoalsList = () => {
-
   const { token } = useAuth();
+  const { habits, setHabits, currentHabit, setCurrentHabit } = useHabit();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [habits, setHabits] = useState<Habit[]>([]);
+  const [habit_view_open, setHabitViewOpen] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<{ [key: number]: HTMLElement | null }>({});
   const confirm = useConfirm();
-  const [habit_view_open, setHabitViewOpen] = useState(false);
-  const [currentHabit, setCurrentHabit] = useState<Habit | null>(null);
 
   useEffect(() => {
-    const fetchGoals = async (): Promise<Habit[]> => {
+    const fetchHabits = async () => {
       try {
-        const response = await axios.get<Habit[]>(`${API_URL}/habits`, {
+        const response = await axios.get(`${API_URL}/habits`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
-        return response.data as [Habit];
-      } catch (error) {
-        console.error('Error fetching goals:', error);
-        throw error;
-      }
-    };
-
-    const loadGoals = async () => {
-      try {
-        const data = await fetchGoals();
-        setHabits(data.sort((a, b) => b.id - a.id));
+        setHabits(response.data);
       } catch (err) {
-        setError('Failed to load goals');
+        setError('Failed to fetch habits');
       } finally {
         setLoading(false);
       }
     };
 
-    loadGoals();
-  }, []);
+    fetchHabits();
+  }, [token, setHabits]);
 
   if (loading) {
     return (
@@ -121,50 +98,52 @@ export const GoalsList = () => {
   const total = habits.length;
   const completed = habits.filter((goal) => goal.status === HabitStatus.COMPLETED).length;
 
-  const handleDayClick = (isActive: boolean, date: Date, habit: Habit) => {
-
+  const handleDayClick = (isActive: boolean, date: Date, habit: HabitDto) => {
     if (!isActive) {
       return;
     }
 
-    if (habit.doneDates && habit.doneDates.length > 0) {
-      let i = habit.doneDates.findIndex(d => {
-        const date1 = new Date(d);
-        return (
-          date1.getFullYear() === date.getFullYear() &&
-          date1.getMonth() === date.getMonth() &&
-          date1.getDate() === date.getDate()
-        );
-      })
+    const dateString = date.toISOString();
+    const updatedDoneDates = habit.doneDates ? [...habit.doneDates] : [];
 
-      if (i !== -1) {
-        habit.doneDates.splice(i, 1);
-      } else {
-        habit.doneDates.push(date);
-      }
+    const existingDateIndex = updatedDoneDates.findIndex(d => {
+      const d1 = new Date(d);
+      return (
+        d1.getFullYear() === date.getFullYear() &&
+        d1.getMonth() === date.getMonth() &&
+        d1.getDate() === date.getDate()
+      );
+    });
+
+    if (existingDateIndex !== -1) {
+      updatedDoneDates.splice(existingDateIndex, 1);
     } else {
-      habit.doneDates = [date];
+      updatedDoneDates.push(dateString);
     }
 
     const updateHabit = async () => {
-      let updatedHabit = await axios.patch(`${API_URL}/habits/${habit.id}`, { doneDates: habit.doneDates }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      setHabits(prevItems =>
-        prevItems.map(item => {
-          if (item.id === habit.id) {
-            return { ...item, doneDates: habit.doneDates }
-          }
-          return item
-        })
-      );
-    }
+      try {
+        await axios.patch(`${API_URL}/habits/${habit.id}`, { doneDates: updatedDoneDates }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        setHabits((prevItems: HabitDto[]) =>
+          prevItems.map((item: HabitDto) => {
+            if (item.id === habit.id) {
+              return { ...item, doneDates: updatedDoneDates };
+            }
+            return item;
+          })
+        );
+      } catch (error) {
+        console.error('Failed to update habit:', error);
+      }
+    };
 
     updateHabit();
-  }
+  };
 
   enum MenuCommand {
     VIEW,
@@ -187,7 +166,7 @@ export const GoalsList = () => {
     }));
   };
 
-  const handleMenuClick = (habit: Habit, cmd: MenuCommand) => {
+  const handleMenuClick = (habit: HabitDto, cmd: MenuCommand) => {
     handleMenuClose(habit.id);
     switch (cmd) {
       case MenuCommand.VIEW:
@@ -212,8 +191,8 @@ export const GoalsList = () => {
                 "Content-Type": "application/json",
               },
             }).then(() => {
-              setHabits(prevItems =>
-                prevItems.filter(item => item.id !== habit.id)
+              setHabits((prevItems: HabitDto[]) =>
+                prevItems.filter((item: HabitDto) => item.id !== habit.id)
               );
             });
           }
@@ -405,9 +384,6 @@ export const GoalsList = () => {
                         ) : (
                           <EventBusyIcon fontSize="small" />
                         )}
-                        {/* <Typography variant="body2">
-                        {day.date.toLocaleDateString('uk-UA', { weekday: 'short' })}
-                      </Typography> */}
                       </Button>
                     </Tooltip>
                   </Grid>
@@ -419,14 +395,18 @@ export const GoalsList = () => {
         </Grid>
         );
       })}
-      <Dialog open={habit_view_open} onClose={() => {
-              setCurrentHabit(null);
-              setHabitViewOpen(false)
-            }}fullWidth>
-              <DialogContent sx={{ p: 0, m: 0 }}>
-                <HabitView habit={currentHabit} setHabit={setCurrentHabit} />
-              </DialogContent>
-            </Dialog>
+      <Dialog 
+        open={habit_view_open} 
+        onClose={() => {
+          setCurrentHabit(null);
+          setHabitViewOpen(false)
+        }}
+        fullWidth
+      >
+        <DialogContent sx={{ p: 0, m: 0 }}>
+          <HabitView />
+        </DialogContent>
+      </Dialog>
     </Grid>
   );
 }; 

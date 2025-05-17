@@ -1,11 +1,21 @@
+export interface HabitDto {
+  id: number;
+  name: string;
+  frequency: string;
+  customDates?: string[];
+  doneDates?: string[];
+  goals?: GoalDto[];
+}
 
 export interface CreateGoalDto {
   name: string;
   completed: boolean;
 }
 
-export interface GoalDto extends CreateGoalDto {
+export interface GoalDto {
   id: number;
+  name: string;
+  completed: boolean;
 }
 
 export enum HabitFrequency {
@@ -18,6 +28,7 @@ export enum HabitStatus {
   ARCHIVED = 'ARCHIVED',
   COMPLETED = 'COMPLETED'
 }
+
 export interface HabitDto {
   id: number;
   name: string;

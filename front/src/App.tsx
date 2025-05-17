@@ -12,6 +12,7 @@ import { HabitCreate } from './components/HabitCreate';
 import { Playground } from './components/Playground';
 import { ConfirmProvider } from './components/common/Confirmation';
 import { HabitView } from './components/habit/HabitView';
+import { HabitProvider } from './contexts/HabitContext';
 
 const theme = createTheme({
   typography: {
@@ -149,7 +150,9 @@ const App = () => {
       <CssBaseline />
       <Router>
         <AuthProvider>
-          <AppRoutes />
+          <HabitProvider>
+            <AppRoutes />
+          </HabitProvider>
         </AuthProvider>
       </Router>
     </ThemeProvider>

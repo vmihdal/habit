@@ -5,20 +5,31 @@ import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { PickersDay, pickersDayClasses } from '@mui/x-date-pickers/PickersDay';
 import { Box, Container } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { Dayjs } from 'dayjs';
 import 'dayjs/locale/uk';
-import { HabitDto as Habit, HabitFrequency } from '../../types/habit.types';
+import { HabitDto, HabitFrequency } from '../../types/habit.types';
 import axios from 'axios';
 import CheckIcon from '@mui/icons-material/Check';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
+import { useHabit } from '../../contexts/HabitContext';
 
 const API_URL = 'http://localhost:3001';
 
-function CustomDayButton(props: any, habit: Habit, setHabit: React.Dispatch<React.SetStateAction<Habit | null>>) {
+interface CustomDayButtonProps {
+  day: Dayjs;
+  selectedDate: Dayjs | null;
+  habit: HabitDto;
+  onDaySelect: (date: Dayjs) => void;
+  outsideCurrentMonth: boolean;
+  isFirstVisibleCell: boolean;
+  isLastVisibleCell: boolean;
+}
+
+const CustomDayButton = memo(({ day, selectedDate, habit, onDaySelect, outsideCurrentMonth, isFirstVisibleCell, isLastVisibleCell }: CustomDayButtonProps) => {
   const { token } = useAuth();
-  const { day, selectedDate, ...other } = props;
-  const dayDate = new Date(day);
+  const { updateHabit } = useHabit();
+  const dayDate = new Date(day.toDate());
 
   let isActive = habit.frequency === HabitFrequency.DAILY;
   if (habit.frequency === HabitFrequency.CUSTOM && habit.customDates) {
@@ -41,51 +52,50 @@ function CustomDayButton(props: any, habit: Habit, setHabit: React.Dispatch<Reac
     );
   }) !== undefined;
 
-  const handleDayClick = (date: Date, habit: Habit) => {
+  const handleDayClick = async () => {
+    if (!isActive) return;
 
-    if (habit.doneDates && habit.doneDates.length > 0) {
-      let i = habit.doneDates.findIndex(d => {
-        const date1 = new Date(d);
-        return (
-          date1.getFullYear() === date.getFullYear() &&
-          date1.getMonth() === date.getMonth() &&
-          date1.getDate() === date.getDate()
-        );
-      })
+    const dateString = dayDate.toISOString();
+    const updatedDoneDates = habit.doneDates ? [...habit.doneDates] : [];
+    const existingDateIndex = updatedDoneDates.findIndex(d => {
+      const d1 = new Date(d);
+      return (
+        d1.getFullYear() === dayDate.getFullYear() &&
+        d1.getMonth() === dayDate.getMonth() &&
+        d1.getDate() === dayDate.getDate()
+      );
+    });
 
-      if (i !== -1) {
-        habit.doneDates.splice(i, 1);
-      } else {
-        habit.doneDates.push(date);
-      }
+    if (existingDateIndex !== -1) {
+      updatedDoneDates.splice(existingDateIndex, 1);
     } else {
-      habit.doneDates = [date];
+      updatedDoneDates.push(dateString);
     }
 
-    axios.patch(`${API_URL}/habits/${habit.id}`, { doneDates: habit.doneDates }, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }).then(_ => {
-      setHabit((prev) => {
-        if (!prev) {
-          return null;
-        }
-        return { ...prev, doneDates: habit.doneDates };
+    try {
+      await axios.patch(`${API_URL}/habits/${habit.id}`, { doneDates: updatedDoneDates }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
-    }).catch(error => {
-      console.error(error);
-    });
-  }
+      updateHabit(habit.id, { doneDates: updatedDoneDates });
+      onDaySelect(day);
+    } catch (error) {
+      console.error('Failed to update habit:', error);
+    }
+  };
 
   return (
     <PickersDay
-      {...other}
       day={day}
       selected={isDone}
       disabled={!isActive}
-      onClick={() => handleDayClick(dayDate, habit)}
+      onClick={handleDayClick}
+      onDaySelect={onDaySelect}
+      outsideCurrentMonth={outsideCurrentMonth}
+      isFirstVisibleCell={isFirstVisibleCell}
+      isLastVisibleCell={isLastVisibleCell}
       sx={{
         border: 1,
         minWidth: 0,
@@ -109,17 +119,15 @@ function CustomDayButton(props: any, habit: Habit, setHabit: React.Dispatch<Reac
       {isActive && isDone ? <CheckIcon fontSize="small" /> : isActive ? null : <EventBusyIcon fontSize="small" />}
     </PickersDay>
   );
-}
+});
 
-export const HabitViewCalendar = ({ habit, setHabit }: { habit: Habit | null, setHabit: React.Dispatch<React.SetStateAction<Habit | null>> }) => {
-  const { token } = useAuth();
+CustomDayButton.displayName = 'CustomDayButton';
+
+export const HabitViewCalendar = memo(() => {
+  const { currentHabit } = useHabit();
   const [value, setValue] = useState<Dayjs | null>(null);
 
-  useEffect(() => {
-
-  }, []);
-
-  if (!habit) {
+  if (!currentHabit) {
     return null;
   }
 
@@ -128,8 +136,15 @@ export const HabitViewCalendar = ({ habit, setHabit }: { habit: Habit | null, se
       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="uk">
         <DateCalendar
           value={value}
+          onChange={(newValue) => setValue(newValue)}
           slots={{
-            day: (props: any) => CustomDayButton(props, habit, setHabit),
+            day: (props) => (
+              <CustomDayButton
+                {...props}
+                habit={currentHabit}
+                selectedDate={value}
+              />
+            ),
           }}
           sx={{
             '&.MuiDateCalendar-root': {
@@ -156,4 +171,6 @@ export const HabitViewCalendar = ({ habit, setHabit }: { habit: Habit | null, se
       </LocalizationProvider>
     </Container>
   );
-}; 
+});
+
+HabitViewCalendar.displayName = 'HabitViewCalendar'; 
