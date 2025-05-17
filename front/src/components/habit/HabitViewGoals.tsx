@@ -168,6 +168,7 @@ export const HabitViewGoals = ({ habit, setHabit }: { habit: Habit | null, setHa
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {habit.goals.map((goal) => (
           <Paper
+            key={"goal" + "-" + habit.id + "-" + goal.id}
             elevation={0}
             sx={{
               display: 'flex',
@@ -194,8 +195,8 @@ export const HabitViewGoals = ({ habit, setHabit }: { habit: Habit | null, setHa
             >
               {goal.name}
             </Typography>
-            <IconButton size="small">
-              <ClearIcon onClick={() => handleGoalRemove(goal)} />
+            <IconButton size="small" onClick={() => handleGoalRemove(goal)}>
+              <ClearIcon  />
             </IconButton>
           </Paper>
         ))}

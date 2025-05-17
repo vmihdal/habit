@@ -9,18 +9,9 @@ import { LogoutButton } from '../LogoutButton';
 
 export const HabitProfile: React.FC = () => {
 
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<UserDto | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
-  useEffect(() => {
-    
-  }, []);
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>

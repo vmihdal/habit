@@ -53,8 +53,9 @@ const weekDays = Array.from({ length: 7 }).map((_, i) => {
   };
 });
 
-
 const API_URL = 'http://localhost:3001';
+
+
 
 export const GoalsList = () => {
 
@@ -67,23 +68,22 @@ export const GoalsList = () => {
   const [habit_view_open, setHabitViewOpen] = useState(false);
   const [currentHabit, setCurrentHabit] = useState<Habit | null>(null);
 
-  const fetchGoals = async (): Promise<Habit[]> => {
-    try {
-      const response = await axios.get<Habit[]>(`${API_URL}/habits`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      return response.data as [Habit];
-    } catch (error) {
-      console.error('Error fetching goals:', error);
-      throw error;
-    }
-  };
-
-
   useEffect(() => {
+    const fetchGoals = async (): Promise<Habit[]> => {
+      try {
+        const response = await axios.get<Habit[]>(`${API_URL}/habits`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        return response.data as [Habit];
+      } catch (error) {
+        console.error('Error fetching goals:', error);
+        throw error;
+      }
+    };
+
     const loadGoals = async () => {
       try {
         const data = await fetchGoals();
@@ -352,15 +352,6 @@ export const GoalsList = () => {
               </Menu>
             </Box>
 
-            <Dialog open={habit_view_open} onClose={() => {
-              setCurrentHabit(null);
-              setHabitViewOpen(false)
-            }}fullWidth>
-              <DialogContent sx={{ p: 0, m: 0 }}>
-                <HabitView habit={currentHabit} setHabit={setCurrentHabit} />
-              </DialogContent>
-            </Dialog>
-
             <Grid container spacing={1}>
               {weekDays.map((day) => {
                 let isActive = habit.frequency === HabitFrequency.DAILY;
@@ -428,6 +419,14 @@ export const GoalsList = () => {
         </Grid>
         );
       })}
+      <Dialog open={habit_view_open} onClose={() => {
+              setCurrentHabit(null);
+              setHabitViewOpen(false)
+            }}fullWidth>
+              <DialogContent sx={{ p: 0, m: 0 }}>
+                <HabitView habit={currentHabit} setHabit={setCurrentHabit} />
+              </DialogContent>
+            </Dialog>
     </Grid>
   );
 }; 
