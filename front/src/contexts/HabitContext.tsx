@@ -8,7 +8,7 @@ interface HabitContextType {
   setHabits: Dispatch<SetStateAction<HabitDto[]>>;
   currentHabit: HabitDto | null;
   setCurrentHabit: (habit: HabitDto | null) => void;
-  updateHabit: (habitId: number, updates: Partial<HabitDto>) => Promise<void>;
+  updateHabit: (habitId: number, updates: Partial<HabitDto>) => Promise<void | HabitDto>;
 }
 
 const HabitContext = createContext<HabitContextType | undefined>(undefined);
@@ -47,7 +47,7 @@ export const HabitProvider = ({ children }: { children: ReactNode }) => {
         )
       );
 
-      response.data as HabitDto
+      return response.data as HabitDto;
     }).catch(message => {
       console.error("Failed to update habit: ", message);
       message

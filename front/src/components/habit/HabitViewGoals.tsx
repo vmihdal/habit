@@ -68,13 +68,14 @@ export const HabitViewGoals = memo(() => {
   }
 
   const handleGoalChange = ( event: React.ChangeEvent<HTMLInputElement>, goal: GoalDto) => {
-
     if (!currentHabit || !currentHabit.goals) return;
-    goal.completed = event.target.checked;
-    const updatedGoals = currentHabit.goals.map((g: GoalDto) => 
-      g.id === goal.id ? goal : g
-    );
-    updateHabit(currentHabit.id, { goals: updatedGoals })
+
+    let target = currentHabit.goals.find((e) => e.id == goal.id);
+    if (target ) {
+      target.completed = event.target.checked;
+    }
+
+    updateHabit(currentHabit.id, { goals: currentHabit.goals })
   };
 
   const onSubmit = async (data: FormData) => {
@@ -85,7 +86,6 @@ export const HabitViewGoals = memo(() => {
     updateHabit(currentHabit.id, { goals: goals })
     .then( _ => {
       reset()
-      setGoalShowForm(false)
     })
     .catch(message => {
       setError('name', {
@@ -170,9 +170,12 @@ export const HabitViewGoals = memo(() => {
                 disabled={isSubmitting}>
                 Додати
               </Button>
-              <Button size="small" variant="text" type="submit"
-                disabled={isSubmitting} onClick={() => setGoalShowForm(false)}>
-                Відмінити
+              <Button size="small" variant="text" type="button"
+                onClick={() => {
+                  setGoalShowForm(false)
+                  reset()
+                  }}>
+                Завершити
               </Button>
             </Box>
           </form>
