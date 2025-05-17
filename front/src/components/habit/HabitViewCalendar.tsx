@@ -30,6 +30,7 @@ const CustomDayButton = memo(({ day, selectedDate, habit, onDaySelect, outsideCu
   const { token } = useAuth();
   const { updateHabit } = useHabit();
   const dayDate = new Date(day.toDate());
+  const [hovered, setHovered] = useState(false);
 
   let isActive = habit.frequency === HabitFrequency.DAILY;
   if (habit.frequency === HabitFrequency.CUSTOM && habit.customDates) {
@@ -96,6 +97,7 @@ const CustomDayButton = memo(({ day, selectedDate, habit, onDaySelect, outsideCu
       outsideCurrentMonth={outsideCurrentMonth}
       isFirstVisibleCell={isFirstVisibleCell}
       isLastVisibleCell={isLastVisibleCell}
+      title={`${day.toDate().toLocaleString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })}`}
       sx={{
         border: 1,
         minWidth: 0,
@@ -116,7 +118,7 @@ const CustomDayButton = memo(({ day, selectedDate, habit, onDaySelect, outsideCu
         }
       }}
     >
-      {isActive && isDone ? <CheckIcon fontSize="small" /> : isActive ? null : <EventBusyIcon fontSize="small" />}
+      {!isActive && <EventBusyIcon fontSize="small" />}
     </PickersDay>
   );
 });

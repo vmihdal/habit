@@ -6,17 +6,17 @@ import {
   Typography,
   Paper,
   Button,
-  TextField
+  TextField,
+  Collapse
 } from "@mui/material";
-import { useAuth } from '../../contexts/AuthContext';
-import { CreateGoalDto, GoalDto, HabitDto } from '../../types/habit.types';
+import { GoalDto } from '../../types/habit.types';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { Add as AddIcon } from '@mui/icons-material';
 import ClearIcon from '@mui/icons-material/Clear';
 import * as yup from 'yup';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import axios from 'axios';
 import { useHabit } from '../../contexts/HabitContext';
 
 interface FormData {
@@ -35,11 +35,9 @@ const schema = yup.object().shape({
     ),
 });
 
-const API_URL = 'http://localhost:3001';
-
 export const HabitViewGoals = memo(() => {
   const { currentHabit, updateHabit } = useHabit();
-  const { token } = useAuth();
+  const [showGoalForm, setGoalShowForm] = useState(false);
 
   useEffect(() => {
 
@@ -87,6 +85,7 @@ export const HabitViewGoals = memo(() => {
     updateHabit(currentHabit.id, { goals: goals })
     .then( _ => {
       reset()
+      setGoalShowForm(false)
     })
     .catch(message => {
       setError('name', {
@@ -98,6 +97,12 @@ export const HabitViewGoals = memo(() => {
 
   return (
     <Box>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        py: 2
+      }}>
       <Typography
         sx={{
           fontSize: 16,
@@ -107,10 +112,16 @@ export const HabitViewGoals = memo(() => {
       >
         Цілі
       </Typography>
+      {!showGoalForm &&
+        <Box><IconButton title = "Додати ціль" onClick={() => setGoalShowForm(true)}><AddIcon/> </IconButton>
+      </Box>
+        }
+      </Box>
+      
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {currentHabit.goals.map((goal: GoalDto) => (
+        {currentHabit.goals.map((goal: GoalDto, index) => (
           <Paper
-            key={"goal" + "-" + currentHabit.id + "-" + goal.id}
+            key={"goal" + "-" + currentHabit.id + "-" + index}
             elevation={0}
             sx={{
               display: 'flex',
@@ -137,11 +148,12 @@ export const HabitViewGoals = memo(() => {
             >
               {goal.name}
             </Typography>
-            <IconButton size="small" onClick={() => handleGoalRemove(goal)}>
+            <IconButton size="small" title = "Видалити ціль" onClick={() => handleGoalRemove(goal)}>
               <ClearIcon  />
             </IconButton>
           </Paper>
         ))}
+        <Collapse in={showGoalForm}>
         <Paper
           elevation={0}
           sx={{
@@ -158,9 +170,14 @@ export const HabitViewGoals = memo(() => {
                 disabled={isSubmitting}>
                 Додати
               </Button>
+              <Button size="small" variant="text" type="submit"
+                disabled={isSubmitting} onClick={() => setGoalShowForm(false)}>
+                Відмінити
+              </Button>
             </Box>
           </form>
         </Paper>
+        </Collapse>
       </Box>
     </Box>
   );

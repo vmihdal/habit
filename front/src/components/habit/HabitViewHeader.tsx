@@ -62,6 +62,24 @@ export const HabitViewHeader = ({ habit }: { habit: Habit | null }) => {
               Днів  виконано
             </Typography>
           </Box>
+          <Box key={1} sx={{ textAlign: 'center' }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontSize: 20,
+                fontWeight: 600,
+                mb: 0.5
+              }}
+            >
+              {habit.goals ? habit.goals.filter((goal) => goal.completed).length : 0}
+            </Typography>
+            <Typography 
+              variant="body2"
+              sx={{ fontSize: 14 }}
+            >
+              Цілей  виконано
+            </Typography>
+          </Box>
       </Box>
       <Divider />
     </Box>
