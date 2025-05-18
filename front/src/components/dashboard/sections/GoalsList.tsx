@@ -7,6 +7,7 @@ import { useConfirm } from '../../common/Confirmation';
 import { HabitView } from '../../habit/HabitView';
 import { useHabit } from '../../../contexts/HabitContext';
 import { HabitDto, HabitFrequency, HabitStatus } from '../../../types/habit.types';
+import { HabitCreate } from '../../HabitCreate';
 
 // Base habit interface for creating new habits
 interface Habit {

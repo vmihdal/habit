@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   TextField,
@@ -11,6 +11,8 @@ import {
   useMediaQuery,
   MenuItem,
   Alert,
+  Paper,
+  Collapse
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +21,15 @@ import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
+import 'dayjs/locale/uk';
+import dayjs from 'dayjs';
+import { Dayjs } from 'dayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { HabitFrequency } from "../types/habit.types";
+import { PickersDay, pickersDayClasses } from '@mui/x-date-pickers/PickersDay';
 
 const API_URL = 'http://localhost:3001';
 
@@ -45,16 +56,71 @@ const schema = yup.object().shape({
     ),
 });
 
+interface CustomDayButtonProps {
+  day: Dayjs;
+  selectedDate: Dayjs;
+  startDate: Dayjs;
+  endDate: Dayjs;
+  selectedDays: Map<Dayjs,void>;
+  onDaySelect: (date: Dayjs) => void;
+  outsideCurrentMonth: boolean;
+  isFirstVisibleCell: boolean;
+  isLastVisibleCell: boolean;
+}
+
+const CustomDayButton = ({ day, startDate, endDate, onDaySelect, outsideCurrentMonth, isFirstVisibleCell, isLastVisibleCell, selectedDays }: CustomDayButtonProps) => {
+  const active = day >= startDate && day <= endDate;
+  const selected = active && selectedDays.has(day);
+  return (
+    <PickersDay
+      day={day}
+      selected={selected}
+      disabled={!active}
+      // onClick={handleDayClick}
+      onDaySelect={() => {
+        onDaySelect(day)
+      }}
+      outsideCurrentMonth={outsideCurrentMonth}
+      isFirstVisibleCell={isFirstVisibleCell}
+      isLastVisibleCell={isLastVisibleCell}
+      sx={{
+        border: 1,
+        minWidth: 0,
+        padding: 0,
+        borderStyle: 'dashed',
+        borderColor: active ? 'black' : 'grey.400',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fillColor: selected ? 'black' : 'white',
+        [`&&.${pickersDayClasses.selected}`]: {
+          background: selected ? 'rgb(0, 0, 0)' : 'white',
+          color: active ? selected ? 'white' : 'black' : 'grey.400',
+        },
+        [`&&.${pickersDayClasses.root}:hover`]: {
+          background: 'rgba(0, 0, 0, 0.1)',
+        }
+      }}
+    >
+    </PickersDay>
+  );
+};
+
+CustomDayButton.displayName = 'CustomDayButton';
+
 export const HabitCreate = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [showFrequencySelector, setFrequencySelector] = useState<boolean>(false);
   const { token } = useAuth();
+  const [startDate, setStartDate] = useState<Dayjs>(dayjs());
+  const [endDate, setEndDate] = useState<Dayjs>(startDate.add(1, "month"));
 
-  const [duration, setDuration] = useState("month");
-  const [frequency, setFrequency] = useState("daily");
-  const [startDate, setStartDate] = useState("today");
+  const [frequency, setFrequency] = useState<HabitFrequency>(HabitFrequency.DAILY);
+  const [selectedDays, setSelectedDays] = useState(new Map<Dayjs,void>());
   const [reminder, setReminder] = useState("19:30");
 
   const {
@@ -66,40 +132,41 @@ export const HabitCreate = () => {
   });
 
   const onSubmit = async (data: FormData) => {
-    try {
-      setError(null);
+    // try {
+    //   setError(null);
 
-      const habitData = {
-        name: data.name,
-        frequency: frequency.toUpperCase(),
-        startDate: new Date(),
-        reminder: new Date(`2000-01-01T${reminder}:00`),
-        targetDays: duration === "month" ? 30 : 7,
-        color: "#FF5733", // Default color
-      };
+    //   const habitData = {
+    //     name: data.name,
+    //     frequency: frequency.toUpperCase(),
+    //     startDate: new Date(),
+    //     reminder: new Date(`2000-01-01T${reminder}:00`),
+    //     targetDays: duration === "month" ? 30 : 7,
+    //     color: "#FF5733", // Default color
+    //   };
 
-      await axios.post(`${API_URL}/habits`, habitData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+    //   await axios.post(`${API_URL}/habits`, habitData, {
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //       "Content-Type": "application/json",
+    //     },
+    //   });
 
-      navigate("/dashboard");
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        if (err.response) {
-          setError(err.response.data.message || "Помилка при створенні звички");
-        }
-      } else {
-        setError("Невідома помилка");
-      }
-      console.error("Error creating habit:", err);
-    }
+    //   navigate("/dashboard");
+    // } catch (err) {
+    //   if (axios.isAxiosError(err)) {
+    //     if (err.response) {
+    //       setError(err.response.data.message || "Помилка при створенні звички");
+    //     }
+    //   } else {
+    //     setError("Невідома помилка");
+    //   }
+    //   console.error("Error creating habit:", err);
+    // }
   };
 
   return (
-    <Container
+    <Paper sx={{ p: 2, m: 0 }}>
+      {/* <Container
       maxWidth="lg"
       sx={{
         minHeight: "100vh",
@@ -111,7 +178,7 @@ export const HabitCreate = () => {
         p: 0,
         position: "relative",
       }}
-    >
+    > */}
       <form
         onSubmit={handleSubmit(onSubmit)}
         style={{
@@ -124,7 +191,7 @@ export const HabitCreate = () => {
         <Box
           sx={{
             width: "100%",
-            maxWidth: { xs: "342px", sm: "450px" },
+            // maxWidth: { xs: "342px", sm: "450px" },
             mx: "auto",
             mt: isMobile ? "80px" : 0,
             p: { xs: 2, sm: 4 },
@@ -135,20 +202,20 @@ export const HabitCreate = () => {
               {error}
             </Alert>
           )} */}
-           {error && (
-              <Typography color="error" variant="body2">
-                {error}
-              </Typography>
+          {error && (
+            <Typography color="error" variant="body2">
+              {error}
+            </Typography>
           )}
 
-          <Box sx={{ mb: 4 }}>
-            <img
+          <Box sx={{ mb: 4, alignContent: "center" }}>
+            {/* <img
               width={isMobile ? "150" : "200"}
               height={isMobile ? "43.24" : "57.65"}
               alt="Logo"
               src="/frame-13838-2.svg"
               style={{ marginBottom: "2rem" }}
-            />
+            /> */}
             <Typography
               variant={isMobile ? "h5" : "h6"}
               sx={{ fontWeight: 600, color: "rgba(2, 6, 24, 1)", mb: 1 }}
@@ -186,7 +253,142 @@ export const HabitCreate = () => {
               Налаштування
             </Typography>
 
-            {[
+            <Box key="duration">
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-around",
+                  gap: 1,
+                  py: 1,
+                }}
+              >
+                <Typography color="text.secondary">Тривалість</Typography>
+                <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="uk">
+                  <DatePicker
+                    label="Початок"
+                    value={startDate}
+                    onChange={(newValue) => {
+                      setStartDate(newValue)
+
+                      setSelectedDays((prev) => {
+                        return new Map(
+                          [...prev.entries()]
+                          .filter(([e, item]) => e >= startDate)
+                        )
+                      })
+                    }}
+                  />
+                  <DatePicker
+                    label="Кінець"
+                    value={endDate}
+                    onChange={(newValue) => {
+                      setEndDate(newValue)
+                      setSelectedDays((prev) => {
+                        return new Map(
+                          [...prev.entries()]
+                          .filter(([e, item]) => e <= endDate)
+                        )
+                      })
+                    }}
+                  />
+                </LocalizationProvider>
+              </Box>
+            </Box>
+            <Divider />
+
+            <Box key="frequency">
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Typography color="text.secondary">Частота виконання</Typography>
+                <Select
+                    variant="standard"
+                    value={frequency}
+                    onChange={(e) => {
+                      setFrequency(e.target.value)
+                    }}
+                    disableUnderline
+                    sx={{
+                      minWidth: 100,
+                      textAlign: "right",
+                      fontSize: "0.95rem",
+                    }}
+                  >
+                      <MenuItem value={HabitFrequency.DAILY}>По днях</MenuItem>
+                      <MenuItem value={HabitFrequency.CUSTOM}>Вказати частоту
+
+                    
+                      </MenuItem>
+                  </Select>
+                  
+              </Box>
+              <Collapse in={frequency == HabitFrequency.CUSTOM}>
+              <Box>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="uk">
+        <DateCalendar
+          slots={{
+            day: (props) => (
+              <CustomDayButton
+                {...props}
+                startDate={startDate}
+                endDate={endDate}
+                selectedDays={selectedDays}
+                onDaySelect={(day) => {
+                  if (selectedDays.has(day) ) {
+                    setSelectedDays((prev) => {
+                      return new Map(
+                        [...prev.entries()]
+                        .filter(([e, item]) => e != day)
+                      )
+                    })
+                  } else {
+                    setSelectedDays((prev) => {
+                      return new Map(
+                        [...prev.entries()]
+                      ).set(day)
+                    })
+                  }
+                }}
+              />
+            ),
+          }}
+          sx={{
+            '&.MuiDateCalendar-root': {
+              height: '100%',
+              width: '100%',
+              maxHeight: 'none',
+              '& .MuiDayCalendar-weekDayLabel': {
+                fontSize: '1rem',
+              },
+              '& div[role="row"]': {
+                justifyContent: 'space-evenly',
+              },
+              '& .MuiDayCalendar-slideTransition': {
+                minHeight: '500px',
+              },
+              '& .MuiPickersDay-root': {
+                height: '50px',
+                width: '50px',
+                fontSize: '1rem',
+              },
+            },
+          }}
+        />
+      </LocalizationProvider>
+              </Box>
+             
+              </Collapse>
+              {/* {Array.from(selectedDays.entries()).map(([day, val]) => (
+                <Typography>{day.toISOString()}</Typography>
+              ))} */}
+            </Box>
+
+            {/* {[
               {
                 label: "Тривалість",
                 value: duration,
@@ -256,15 +458,15 @@ export const HabitCreate = () => {
                 </Box>
                 {index !== 3 && <Divider />}
               </Box>
-            ))}
+            ))} */}
 
-            <Typography
+            {/* <Typography
               variant="body2"
               color="primary"
               sx={{ mt: 1, cursor: "pointer" }}
             >
               + Додати ціль...
-            </Typography>
+            </Typography> */}
 
             <Box sx={{ flexGrow: 1 }} />
 
@@ -301,6 +503,7 @@ export const HabitCreate = () => {
           </Box>
         </Box>
       </form>
-    </Container>
+      {/* </Container> */}
+    </Paper>
   );
 };

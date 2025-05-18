@@ -2,17 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserDto } from '../../types/user.types';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Container, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Button, Container, DialogContent, Typography, useMediaQuery, useTheme, Dialog } from '@mui/material';
 import { GoalsList } from "./sections/GoalsList";
 import { Add as AddIcon } from '@mui/icons-material';
 import { LogoutButton } from '../LogoutButton';
+import { HabitCreate } from '../HabitCreate';
 
 export const HabitProfile: React.FC = () => {
 
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
+  const [habit_create_view_open, setHabitCreateViewOpen] = useState(false);
+  
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Box
@@ -54,7 +56,7 @@ export const HabitProfile: React.FC = () => {
       <Button
         variant="text"
         startIcon={<AddIcon/>}
-        onClick={() => navigate('/add-habit')}
+        onClick={() => setHabitCreateViewOpen(true)}
         sx={{
           color: 'black',
         }}
@@ -62,6 +64,17 @@ export const HabitProfile: React.FC = () => {
       </Button>
     </Box>
       <GoalsList />
+      <Dialog 
+        open={habit_create_view_open} 
+        onClose={() => {
+          setHabitCreateViewOpen(false)
+        }}
+        fullWidth
+      >
+        <DialogContent sx={{ p: 0, m: 0 }}>
+          <HabitCreate />
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 }; 
