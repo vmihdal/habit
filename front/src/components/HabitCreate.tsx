@@ -12,24 +12,45 @@ import {
   MenuItem,
   Alert,
   Paper,
-  Collapse
+  Collapse,
+  Grid,
+  List,
+  ListItem,
+  Checkbox,
+  IconButton
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
+import { ValidationError } from "yup";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import 'dayjs/locale/uk';
 import dayjs from 'dayjs';
+import isoWeek from 'dayjs/plugin/isoWeek'
 import { Dayjs } from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
-import { HabitFrequency } from "../types/habit.types";
+import { CreateGoalDto, GoalDto, HabitFrequency } from "../types/habit.types";
 import { PickersDay, pickersDayClasses } from '@mui/x-date-pickers/PickersDay';
+import { Add, RadioButtonChecked, RadioButtonUnchecked } from "@mui/icons-material";
+import ClearIcon from '@mui/icons-material/Clear';
+
+dayjs.extend(isoWeek)
+
+const DayOfWeek = {
+  Monday: { date: dayjs().startOf('isoWeek').add(0, 'day'), selected: true },
+  Tuesday: { date: dayjs().startOf('isoWeek').add(1, 'day'), selected: true },
+  Wednesday: { date: dayjs().startOf('isoWeek').add(2, 'day'), selected: true },
+  Thursday: { date: dayjs().startOf('isoWeek').add(3, 'day'), selected: true },
+  Friday: { date: dayjs().startOf('isoWeek').add(4, 'day'), selected: true },
+  Saturday: { date: dayjs().startOf('isoWeek').add(5, 'day'), selected: true },
+  Sunday: { date: dayjs().startOf('isoWeek').add(6, 'day'), selected: true }
+} as const;
 
 const API_URL = 'http://localhost:3001';
 
@@ -56,12 +77,14 @@ const schema = yup.object().shape({
     ),
 });
 
+const goalsSchema = yup.array().of(schema);
+
 interface CustomDayButtonProps {
   day: Dayjs;
   selectedDate: Dayjs;
   startDate: Dayjs;
   endDate: Dayjs;
-  selectedDays: Map<Dayjs,void>;
+  selectedDays: Map<Dayjs, void>;
   onDaySelect: (date: Dayjs) => void;
   outsideCurrentMonth: boolean;
   isFirstVisibleCell: boolean;
@@ -109,19 +132,22 @@ const CustomDayButton = ({ day, startDate, endDate, onDaySelect, outsideCurrentM
 
 CustomDayButton.displayName = 'CustomDayButton';
 
+interface CreateGoal extends CreateGoalDto {
+  error: string | null
+}
+
 export const HabitCreate = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const [showFrequencySelector, setFrequencySelector] = useState<boolean>(false);
-  const { token } = useAuth();
   const [startDate, setStartDate] = useState<Dayjs>(dayjs());
   const [endDate, setEndDate] = useState<Dayjs>(startDate.add(1, "month"));
 
   const [frequency, setFrequency] = useState<HabitFrequency>(HabitFrequency.DAILY);
-  const [selectedDays, setSelectedDays] = useState(new Map<Dayjs,void>());
-  const [reminder, setReminder] = useState("19:30");
+  const [selectedDates, setSelectedDates] = useState(new Map<Dayjs, void>());
+  const [selectedDays, setSelectedDays] = useState(DayOfWeek);
+  const [goals, setGoals] = useState<CreateGoal[]>([]);
 
   const {
     register,
@@ -166,19 +192,6 @@ export const HabitCreate = () => {
 
   return (
     <Paper sx={{ p: 2, m: 0 }}>
-      {/* <Container
-      maxWidth="lg"
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "white",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        p: 0,
-        position: "relative",
-      }}
-    > */}
       <form
         onSubmit={handleSubmit(onSubmit)}
         style={{
@@ -197,11 +210,6 @@ export const HabitCreate = () => {
             p: { xs: 2, sm: 4 },
           }}
         >
-          {/* {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )} */}
           {error && (
             <Typography color="error" variant="body2">
               {error}
@@ -209,13 +217,6 @@ export const HabitCreate = () => {
           )}
 
           <Box sx={{ mb: 4, alignContent: "center" }}>
-            {/* <img
-              width={isMobile ? "150" : "200"}
-              height={isMobile ? "43.24" : "57.65"}
-              alt="Logo"
-              src="/frame-13838-2.svg"
-              style={{ marginBottom: "2rem" }}
-            /> */}
             <Typography
               variant={isMobile ? "h5" : "h6"}
               sx={{ fontWeight: 600, color: "rgba(2, 6, 24, 1)", mb: 1 }}
@@ -271,10 +272,10 @@ export const HabitCreate = () => {
                     onChange={(newValue) => {
                       setStartDate(newValue)
 
-                      setSelectedDays((prev) => {
+                      setSelectedDates((prev) => {
                         return new Map(
                           [...prev.entries()]
-                          .filter(([e, item]) => e >= startDate)
+                            .filter(([e, item]) => e >= startDate)
                         )
                       })
                     }}
@@ -284,10 +285,10 @@ export const HabitCreate = () => {
                     value={endDate}
                     onChange={(newValue) => {
                       setEndDate(newValue)
-                      setSelectedDays((prev) => {
+                      setSelectedDates((prev) => {
                         return new Map(
                           [...prev.entries()]
-                          .filter(([e, item]) => e <= endDate)
+                            .filter(([e, item]) => e <= endDate)
                         )
                       })
                     }}
@@ -303,170 +304,194 @@ export const HabitCreate = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
+                  py: 1
                 }}
               >
                 <Typography color="text.secondary">Частота виконання</Typography>
                 <Select
-                    variant="standard"
-                    value={frequency}
-                    onChange={(e) => {
-                      setFrequency(e.target.value)
-                    }}
-                    disableUnderline
-                    sx={{
-                      minWidth: 100,
-                      textAlign: "right",
-                      fontSize: "0.95rem",
-                    }}
-                  >
-                      <MenuItem value={HabitFrequency.DAILY}>По днях</MenuItem>
-                      <MenuItem value={HabitFrequency.CUSTOM}>Вказати частоту
-
-                    
-                      </MenuItem>
-                  </Select>
-                  
-              </Box>
-              <Collapse in={frequency == HabitFrequency.CUSTOM}>
-              <Box>
-                  <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="uk">
-        <DateCalendar
-          slots={{
-            day: (props) => (
-              <CustomDayButton
-                {...props}
-                startDate={startDate}
-                endDate={endDate}
-                selectedDays={selectedDays}
-                onDaySelect={(day) => {
-                  if (selectedDays.has(day) ) {
-                    setSelectedDays((prev) => {
-                      return new Map(
-                        [...prev.entries()]
-                        .filter(([e, item]) => e != day)
-                      )
-                    })
-                  } else {
-                    setSelectedDays((prev) => {
-                      return new Map(
-                        [...prev.entries()]
-                      ).set(day)
-                    })
-                  }
-                }}
-              />
-            ),
-          }}
-          sx={{
-            '&.MuiDateCalendar-root': {
-              height: '100%',
-              width: '100%',
-              maxHeight: 'none',
-              '& .MuiDayCalendar-weekDayLabel': {
-                fontSize: '1rem',
-              },
-              '& div[role="row"]': {
-                justifyContent: 'space-evenly',
-              },
-              '& .MuiDayCalendar-slideTransition': {
-                minHeight: '500px',
-              },
-              '& .MuiPickersDay-root': {
-                height: '50px',
-                width: '50px',
-                fontSize: '1rem',
-              },
-            },
-          }}
-        />
-      </LocalizationProvider>
-              </Box>
-             
-              </Collapse>
-              {/* {Array.from(selectedDays.entries()).map(([day, val]) => (
-                <Typography>{day.toISOString()}</Typography>
-              ))} */}
-            </Box>
-
-            {/* {[
-              {
-                label: "Тривалість",
-                value: duration,
-                setValue: setDuration,
-                options: [
-                  { value: "month", label: "Місяць" },
-                  { value: "week", label: "Тиждень" },
-                ],
-              },
-              {
-                label: "Повторення",
-                value: frequency,
-                setValue: setFrequency,
-                options: [
-                  { value: "daily", label: "Щоденно" },
-                  { value: "weekly", label: "Щотижня" },
-                  { value: "monthly", label: "Щомісяця" },
-                  { value: "custom", label: "Користувацька" },
-                ],
-              },
-              {
-                label: "Початок",
-                value: startDate,
-                setValue: setStartDate,
-                options: [
-                  { value: "today", label: "Сьогодні" },
-                  { value: "tomorrow", label: "Завтра" },
-                ],
-              },
-              {
-                label: "Нагадування",
-                value: reminder,
-                setValue: setReminder,
-                options: [
-                  { value: "19:30", label: "19:30" },
-                  { value: "20:00", label: "20:00" },
-                ],
-              },
-            ].map(({ label, value, setValue, options }, index) => (
-              <Box key={label}>
-                <Box
+                  variant="standard"
+                  value={frequency}
+                  onChange={(e) => {
+                    setFrequency(e.target.value)
+                  }}
+                  disableUnderline
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    py: 1,
+                    minWidth: 100,
+                    textAlign: "right",
+                    fontSize: "0.95rem",
                   }}
                 >
-                  <Typography color="text.secondary">{label}</Typography>
-                  <Select
-                    variant="standard"
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    disableUnderline
+                  <MenuItem value={HabitFrequency.DAILY}>По днях</MenuItem>
+                  <MenuItem value={HabitFrequency.CUSTOM}>Вказати дні
+
+
+                  </MenuItem>
+                </Select>
+
+              </Box>
+              <Collapse in={frequency == HabitFrequency.CUSTOM}>
+                <Box>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="uk">
+                    <DateCalendar
+                      slots={{
+                        day: (props) => (
+                          <CustomDayButton
+                            {...props}
+                            startDate={startDate}
+                            endDate={endDate}
+                            selectedDays={selectedDates}
+                            onDaySelect={(day) => {
+                              if (selectedDates.has(day)) {
+                                setSelectedDates((prev) => {
+                                  return new Map(
+                                    [...prev.entries()]
+                                      .filter(([e, item]) => e != day)
+                                  )
+                                })
+                              } else {
+                                setSelectedDates((prev) => {
+                                  return new Map(
+                                    [...prev.entries()]
+                                  ).set(day)
+                                })
+                              }
+                            }}
+                          />
+                        ),
+                      }}
+                      sx={{
+                        '&.MuiDateCalendar-root': {
+                          height: '100%',
+                          width: '100%',
+                          maxHeight: 'none',
+                          '& .MuiDayCalendar-weekDayLabel': {
+                            fontSize: '1rem',
+                          },
+                          '& div[role="row"]': {
+                            justifyContent: 'space-evenly',
+                          },
+                          '& .MuiDayCalendar-slideTransition': {
+                            minHeight: '300px',
+                          },
+                          '& .MuiPickersDay-root': {
+                            height: '50px',
+                            width: '50px',
+                            fontSize: '1rem',
+                          },
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </Box>
+              </Collapse>
+              <Collapse in={frequency == HabitFrequency.DAILY}>
+              <Grid container spacing={1}>
+                {Object.entries(selectedDays).map(([key, value]) => {
+                  return <Button
+                    onClick={() => {
+                      setSelectedDays((prev) => {
+                        const newState = { ...prev, [key]: { ...value, selected: !value.selected } };
+                        return newState;
+                      })
+                    }}
                     sx={{
-                      minWidth: 100,
-                      textAlign: "right",
-                      fontSize: "0.95rem",
+                      width: 40,
+                      height: 40,
+                      border: 1,
+                      minWidth: 0,
+                      padding: 0,
+                      borderStyle: 'dashed',
+                      borderColor: value.selected ? 'black' : 'grey.400',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: value.selected ? 'white' : 'black',
+                      backgroundColor: value.selected ? 'rgb(0, 0, 0)' : 'white',
+                      fillColor: value.selected ? 'black' : 'white',
                     }}
                   >
-                    {options.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </Box>
-                {index !== 3 && <Divider />}
-              </Box>
-            ))} */}
+                    <Typography variant="body2">
+                      {value.date.toDate().toLocaleDateString('uk-UA', { weekday: 'short' })}
+                    </Typography>
+                  </Button>
+                })}
 
-            {/* <Typography
-              variant="body2"
-              color="primary"
-              sx={{ mt: 1, cursor: "pointer" }}
+              </Grid>
+              </Collapse>
+              <Divider sx={{ my: 2 }} />
+             
+            <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}
+    >
+       <Typography
+              variant={isMobile ? "h5" : "h6"}
+              sx={{ fontWeight: 600, color: "rgba(2, 6, 24, 1)", mb: 1 }}
             >
-              + Додати ціль...
-            </Typography> */}
+              Цілі
+            </Typography>
+            <IconButton
+          onClick={() => {
+          setGoals((prev) => [...prev, { name: '', completed: false, error: null }]);
+          }}
+      >
+        <Add/>
+      </IconButton>
+      </Box>
+            
+            <Box>
+              <List>
+                {goals.map((goal, index) => {
+                  return (
+                  <ListItem sx={{ padding: 0 }}>
+                  <Checkbox 
+                  icon = {<RadioButtonUnchecked/>}
+                  checkedIcon = {<RadioButtonChecked/>}
+                  disabled
+                  />
+                  <TextField
+                      key = {"goal" + "-" + index}
+                      fullWidth
+                      variant="standard"
+                      slotProps = {{input: {disableUnderline: true }}}
+                      placeholder = {goal.name || "Введіть текст..." }
+                      error= {!!goal.error}
+                      helperText= {goal.error}
+                      onChange={(e) => {
+                        try {
+                          goalsSchema.validateSync([{name : e.target.value}]);
+                          setGoals(prev => prev.map(g => 
+                            g === goal ? { ...g, name: e.target.value, error: null } : g
+                          ));
+                        } catch( err ) {
+
+                          if ( err instanceof ValidationError) {
+                            setGoals(prev => prev.map(g => 
+                              g === goal ? { ...g, name: e.target.value, error: err.message } : g
+                            ));
+                          }
+                        }
+                      }}
+                    />
+                    <IconButton size="small" title = "Видалити ціль" onClick={(e) => {
+                        setGoals(prev => prev.filter(g => 
+                          g !== goal
+                        ));
+                    }}>
+              <ClearIcon  />
+            </IconButton>
+                    </ListItem>)
+                })}
+              </List>
+            </Box>
+
+
+            </Box>
+           
 
             <Box sx={{ flexGrow: 1 }} />
 
@@ -503,7 +528,6 @@ export const HabitCreate = () => {
           </Box>
         </Box>
       </form>
-      {/* </Container> */}
     </Paper>
   );
 };
