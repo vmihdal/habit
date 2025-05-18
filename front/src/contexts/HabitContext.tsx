@@ -10,6 +10,7 @@ interface HabitContextType {
   setCurrentHabit: (habit: HabitDto | null) => void;
   updateHabit: (habitId: number, updates: Partial<HabitDto>) => Promise<void | HabitDto>;
   removeHabit: (habitId: number) => Promise<void>;
+  addHabit: (habit: Partial<HabitDto>) => Promise<void>;
 }
 
 const HabitContext = createContext<HabitContextType | undefined>(undefined);
@@ -90,6 +91,33 @@ export const HabitProvider = ({ children }: { children: ReactNode }) => {
     return promise;
   }, [token]);
 
+  const addHabit = useCallback((habit: Partial<HabitDto>) => {
+    if (!token) {
+      let message = "Cannot update habit: No authentication token available";
+      console.error(message);
+      return Promise.reject(message);
+    }
+
+    let promise = axios.post(`${API_URL}/habits/`, habit, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }).then(response => {
+      // Update the current habit if it's the one being modified
+      let newHabit = response.data as HabitDto;
+
+      setHabits(prevHabits =>
+      [...prevHabits, newHabit ]
+      );
+    }).catch(message => {
+      console.error("Failed to update habit: ", message);
+      message
+    });
+
+    return promise;
+  }, [token]);
+
   return (
     <HabitContext.Provider value={{
       habits,
@@ -97,7 +125,8 @@ export const HabitProvider = ({ children }: { children: ReactNode }) => {
       currentHabit,
       setCurrentHabit,
       updateHabit,
-      removeHabit
+      removeHabit,
+      addHabit
     }}>
       {children}
     </HabitContext.Provider>

@@ -35,10 +35,11 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
-import { CreateGoalDto, GoalDto, HabitFrequency } from "../types/habit.types";
+import { CreateGoalDto, GoalDto, HabitDto, HabitFrequency } from "../types/habit.types";
 import { PickersDay, pickersDayClasses } from '@mui/x-date-pickers/PickersDay';
 import { Add, RadioButtonChecked, RadioButtonUnchecked } from "@mui/icons-material";
 import ClearIcon from '@mui/icons-material/Clear';
+import { useHabit } from '../contexts/HabitContext';
 
 dayjs.extend(isoWeek)
 
@@ -147,7 +148,8 @@ CustomDayButton.displayName = 'CustomDayButton';
 
 export const HabitCreate = () => {
   const theme = useTheme();
-  const {token} = useAuth();
+  const { token } = useAuth();
+  const { addHabit } = useHabit();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -175,35 +177,29 @@ export const HabitCreate = () => {
   };
 
   const onSubmit = async (data: FormData) => {
-    try {
-      setError(null);
+    // try {
+    //   setError(null);
 
-      const habitData = {
-        name: data.name,
-        frequency: frequency.toUpperCase(),
-        startDate,
-        endDate,
-        targetDays: selectedDates.keys.length,
-      };
-
-      await axios.post(`${API_URL}/habits`, habitData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+    addHabit({
+      name: data.name,
+      frequency: frequency.toUpperCase(),
+      startDate: startDate.toDate(),
+      endDate: endDate.toDate(),
+      targetDays: selectedDates.keys.length,
+    })
+      .then(_ => {
+        navigate("/dashboard");
+      })
+      .catch(err => {
+        if (axios.isAxiosError(err)) {
+          if (err.response) {
+            setError(err.response.data.message || "Помилка при створенні звички");
+          }
+        } else {
+          setError("Невідома помилка");
         }
-      });
-
-      navigate("/dashboard");
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        if (err.response) {
-          setError(err.response.data.message || "Помилка при створенні звички");
-        }
-      } else {
-        setError("Невідома помилка");
-      }
-      console.error("Error creating habit:", err);
-    }
+        console.error("Error creating habit:", err);
+      })
   };
 
   return (
