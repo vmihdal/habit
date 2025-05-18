@@ -147,6 +147,7 @@ CustomDayButton.displayName = 'CustomDayButton';
 
 export const HabitCreate = () => {
   const theme = useTheme();
+  const {token} = useAuth();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -174,36 +175,35 @@ export const HabitCreate = () => {
   };
 
   const onSubmit = async (data: FormData) => {
-    // try {
-    //   setError(null);
+    try {
+      setError(null);
 
-    //   const habitData = {
-    //     name: data.name,
-    //     frequency: frequency.toUpperCase(),
-    //     startDate: new Date(),
-    //     reminder: new Date(`2000-01-01T${reminder}:00`),
-    //     targetDays: duration === "month" ? 30 : 7,
-    //     color: "#FF5733", // Default color
-    //   };
+      const habitData = {
+        name: data.name,
+        frequency: frequency.toUpperCase(),
+        startDate,
+        endDate,
+        targetDays: selectedDates.keys.length,
+      };
 
-    //   await axios.post(`${API_URL}/habits`, habitData, {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //       "Content-Type": "application/json",
-    //     },
-    //   });
+      await axios.post(`${API_URL}/habits`, habitData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        }
+      });
 
-    //   navigate("/dashboard");
-    // } catch (err) {
-    //   if (axios.isAxiosError(err)) {
-    //     if (err.response) {
-    //       setError(err.response.data.message || "Помилка при створенні звички");
-    //     }
-    //   } else {
-    //     setError("Невідома помилка");
-    //   }
-    //   console.error("Error creating habit:", err);
-    // }
+      navigate("/dashboard");
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          setError(err.response.data.message || "Помилка при створенні звички");
+        }
+      } else {
+        setError("Невідома помилка");
+      }
+      console.error("Error creating habit:", err);
+    }
   };
 
   return (
