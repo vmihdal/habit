@@ -72,7 +72,7 @@ export const HabitProfile: React.FC = () => {
         fullWidth
       >
         <DialogContent sx={{ p: 0, m: 0 }}>
-          <HabitCreate />
+          <HabitCreate setHabitCreateViewOpen={setHabitCreateViewOpen}/>
         </DialogContent>
       </Dialog>
     </Container>

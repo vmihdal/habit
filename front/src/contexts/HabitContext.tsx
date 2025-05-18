@@ -10,7 +10,7 @@ interface HabitContextType {
   setCurrentHabit: (habit: HabitDto | null) => void;
   updateHabit: (habitId: number, updates: Partial<HabitDto>) => Promise<void | HabitDto>;
   removeHabit: (habitId: number) => Promise<void>;
-  addHabit: (habit: Partial<HabitDto>) => Promise<void>;
+  addHabit: (habit:any) => Promise<void>;
 }
 
 const HabitContext = createContext<HabitContextType | undefined>(undefined);
@@ -91,7 +91,7 @@ export const HabitProvider = ({ children }: { children: ReactNode }) => {
     return promise;
   }, [token]);
 
-  const addHabit = useCallback((habit: Partial<HabitDto>) => {
+  const addHabit = useCallback((habit: any) => {
     if (!token) {
       let message = "Cannot update habit: No authentication token available";
       console.error(message);

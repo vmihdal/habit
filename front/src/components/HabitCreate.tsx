@@ -146,9 +146,12 @@ const CustomDayButton = ({ day, startDate, endDate, onDaySelect, outsideCurrentM
 
 CustomDayButton.displayName = 'CustomDayButton';
 
-export const HabitCreate = () => {
+interface HabitCreateProps {
+  setHabitCreateViewOpen: (open: boolean) => void;
+}
+
+export const HabitCreate: React.FC<HabitCreateProps> = ({ setHabitCreateViewOpen }) => {
   const theme = useTheme();
-  const { token } = useAuth();
   const { addHabit } = useHabit();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
@@ -160,7 +163,7 @@ export const HabitCreate = () => {
   const [selectedDates, setSelectedDates] = useState(new Map<Dayjs, void>());
   const [selectedDays, setSelectedDays] = useState(DayOfWeek);
 
-  const { handleSubmit, register, formState: { errors, isSubmitting }, setValue, watch } = useForm<FormData>({
+  const { handleSubmit, register, reset, formState: { errors, isSubmitting }, setValue, watch } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: 'onChange',
     defaultValues: {
@@ -177,8 +180,7 @@ export const HabitCreate = () => {
   };
 
   const onSubmit = async (data: FormData) => {
-    // try {
-    //   setError(null);
+    setError(null);
 
     addHabit({
       name: data.name,
@@ -186,9 +188,11 @@ export const HabitCreate = () => {
       startDate: startDate.toDate(),
       endDate: endDate.toDate(),
       targetDays: selectedDates.keys.length,
+      goals
     })
       .then(_ => {
-        navigate("/dashboard");
+        reset()
+        setHabitCreateViewOpen(false)
       })
       .catch(err => {
         if (axios.isAxiosError(err)) {
