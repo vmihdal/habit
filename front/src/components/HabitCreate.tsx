@@ -63,6 +63,7 @@ const StyledButton = styled(Button)({
 
 interface FormData {
   name: string;
+  goals: Array<CreateGoalDto>;
 }
 
 const schema = yup.object().shape({
@@ -75,9 +76,21 @@ const schema = yup.object().shape({
       /^[а-яА-ЯґҐєЄіІїЇ\s\d]+$/,
       "Назва повинна містити тільки українські літери, цифри та пробіли"
     ),
-});
-
-const goalsSchema = yup.array().of(schema);
+  goals: yup.array().of(
+    yup.object().shape({
+      name: yup
+        .string()
+        .required("Обов'язкове поле")
+        .min(2, "Назва повинна містити щонайменше 2 символи")
+        .max(50, "Назва не може перевищувати 50 символів")
+        .matches(
+          /^[а-яА-ЯґҐєЄіІїЇ\s\d]+$/,
+          "Назва повинна містити тільки українські літери, цифри та пробіли"
+        ),
+      completed: yup.boolean().required()
+    }).required()
+  ).required()
+}) as yup.ObjectSchema<FormData>;
 
 interface CustomDayButtonProps {
   day: Dayjs;
@@ -132,10 +145,6 @@ const CustomDayButton = ({ day, startDate, endDate, onDaySelect, outsideCurrentM
 
 CustomDayButton.displayName = 'CustomDayButton';
 
-interface CreateGoal extends CreateGoalDto {
-  error: string | null
-}
-
 export const HabitCreate = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -147,15 +156,22 @@ export const HabitCreate = () => {
   const [frequency, setFrequency] = useState<HabitFrequency>(HabitFrequency.DAILY);
   const [selectedDates, setSelectedDates] = useState(new Map<Dayjs, void>());
   const [selectedDays, setSelectedDays] = useState(DayOfWeek);
-  const [goals, setGoals] = useState<CreateGoal[]>([]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
+  const { handleSubmit, register, formState: { errors, isSubmitting }, setValue, watch } = useForm<FormData>({
     resolver: yupResolver(schema),
+    mode: 'onChange',
+    defaultValues: {
+      name: '',
+      goals: []
+    }
   });
+
+  const goals = watch('goals') || [];
+
+  const addGoal = () => {
+    const currentGoals = watch('goals') || [];
+    setValue('goals', [...currentGoals, { name: '', completed: false }]);
+  };
 
   const onSubmit = async (data: FormData) => {
     // try {
@@ -385,113 +401,97 @@ export const HabitCreate = () => {
                 </Box>
               </Collapse>
               <Collapse in={frequency == HabitFrequency.DAILY}>
-              <Grid container spacing={1}>
-                {Object.entries(selectedDays).map(([key, value]) => {
-                  return <Button
-                    onClick={() => {
-                      setSelectedDays((prev) => {
-                        const newState = { ...prev, [key]: { ...value, selected: !value.selected } };
-                        return newState;
-                      })
-                    }}
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      border: 1,
-                      minWidth: 0,
-                      padding: 0,
-                      borderStyle: 'dashed',
-                      borderColor: value.selected ? 'black' : 'grey.400',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: value.selected ? 'white' : 'black',
-                      backgroundColor: value.selected ? 'rgb(0, 0, 0)' : 'white',
-                      fillColor: value.selected ? 'black' : 'white',
-                    }}
-                  >
-                    <Typography variant="body2">
-                      {value.date.toDate().toLocaleDateString('uk-UA', { weekday: 'short' })}
-                    </Typography>
-                  </Button>
-                })}
+                <Grid container spacing={1}>
+                  {Object.entries(selectedDays).map(([key, value]) => {
+                    return <Button
+                      key={key}
+                      onClick={() => {
+                        setSelectedDays((prev) => {
+                          const newState = { ...prev, [key]: { ...value, selected: !value.selected } };
+                          return newState;
+                        })
+                      }}
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        border: 1,
+                        minWidth: 0,
+                        padding: 0,
+                        borderStyle: 'dashed',
+                        borderColor: value.selected ? 'black' : 'grey.400',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: value.selected ? 'white' : 'black',
+                        backgroundColor: value.selected ? 'rgb(0, 0, 0)' : 'white',
+                        fillColor: value.selected ? 'black' : 'white',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {value.date.toDate().toLocaleDateString('uk-UA', { weekday: 'short' })}
+                      </Typography>
+                    </Button>
+                  })}
 
-              </Grid>
+                </Grid>
               </Collapse>
               <Divider sx={{ my: 2 }} />
-             
-            <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}
-    >
-       <Typography
-              variant={isMobile ? "h5" : "h6"}
-              sx={{ fontWeight: 600, color: "rgba(2, 6, 24, 1)", mb: 1 }}
-            >
-              Цілі
-            </Typography>
-            <IconButton
-          onClick={() => {
-          setGoals((prev) => [...prev, { name: '', completed: false, error: null }]);
-          }}
-      >
-        <Add/>
-      </IconButton>
-      </Box>
-            
-            <Box>
-              <List>
-                {goals.map((goal, index) => {
-                  return (
-                  <ListItem sx={{ padding: 0 }}>
-                  <Checkbox 
-                  icon = {<RadioButtonUnchecked/>}
-                  checkedIcon = {<RadioButtonChecked/>}
-                  disabled
-                  />
-                  <TextField
-                      key = {"goal" + "-" + index}
-                      fullWidth
-                      variant="standard"
-                      slotProps = {{input: {disableUnderline: true }}}
-                      placeholder = {goal.name || "Введіть текст..." }
-                      error= {!!goal.error}
-                      helperText= {goal.error}
-                      onChange={(e) => {
-                        try {
-                          goalsSchema.validateSync([{name : e.target.value}]);
-                          setGoals(prev => prev.map(g => 
-                            g === goal ? { ...g, name: e.target.value, error: null } : g
-                          ));
-                        } catch( err ) {
 
-                          if ( err instanceof ValidationError) {
-                            setGoals(prev => prev.map(g => 
-                              g === goal ? { ...g, name: e.target.value, error: err.message } : g
-                            ));
-                          }
-                        }
-                      }}
-                    />
-                    <IconButton size="small" title = "Видалити ціль" onClick={(e) => {
-                        setGoals(prev => prev.filter(g => 
-                          g !== goal
-                        ));
-                    }}>
-              <ClearIcon  />
-            </IconButton>
-                    </ListItem>)
-                })}
-              </List>
-            </Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Typography
+                  variant={isMobile ? "h5" : "h6"}
+                  sx={{ fontWeight: 600, color: "rgba(2, 6, 24, 1)", mb: 1 }}
+                >
+                  Цілі
+                </Typography>
+                <IconButton
+                  onClick={addGoal}
+                >
+                  <Add />
+                </IconButton>
+              </Box>
+
+              <Box>
+                <List>
+                  {goals.map((goal, index) => {
+                    return (
+                      <ListItem key={`item-goal-${index}`} sx={{ padding: 0 }}>
+                        <Checkbox
+                          icon={<RadioButtonUnchecked />}
+                          checkedIcon={<RadioButtonChecked />}
+                          disabled
+                        />
+                        <TextField
+                          key={`goal-${index}`}
+                          fullWidth
+                          variant="standard"
+                          slotProps={{ input: { disableUnderline: true } }}
+                          placeholder={goal.name || "Введіть текст..."}
+                          error={!!errors.goals?.[index]?.name}
+                          helperText={errors.goals?.[index]?.name?.message}
+                          {...register(`goals.${index}.name`)}
+                        />
+                        <IconButton key={`button-goal-${index}`} size="small" title="Видалити ціль" onClick={() => {
+                          const currentGoals = watch('goals') || [];
+                          setValue('goals', currentGoals.filter((_, i) => i !== index));
+                        }}>
+                          <ClearIcon />
+                        </IconButton>
+                      </ListItem>)
+                  })}
+                </List>
+              </Box>
 
 
             </Box>
-           
+
 
             <Box sx={{ flexGrow: 1 }} />
 
